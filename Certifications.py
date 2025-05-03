@@ -119,3 +119,4 @@ def login_globalexam(driver, username, password):
     except Exception as e:
         print(f"Error during login: {e}")
     sleep(2)
+  
