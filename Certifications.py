@@ -119,3 +119,38 @@ def login_globalexam(driver, username, password):
     except Exception as e:
         print(f"Error during login: {e}")
     sleep(2)
+    
+    
+
+def Exercice_01(driver, ChatGPT, target, targets):
+    question_wrapper = WebDriverWait(driver, 20).until(
+                EC.presence_of_element_located((By.ID, "question-wrapper"))
+            )
+    try:
+        question_text = question_wrapper.text
+        question_text = f"""Question: 
+        {question_text}"""
+        print("Question:", question_text)
+        proposition_container = WebDriverWait(driver, 20).until(
+            EC.presence_of_element_located((By.CSS_SELECTOR, "div[data-name='exam-answer-container']"))
+        )
+        propositionsList = [
+            button.text for button in proposition_container.find_elements(By.CSS_SELECTOR, "button[data-draggable-item-id]")
+        ]
+        print("Propositions:", propositionsList)
+        if len(propositionsList) > 0:
+            propositions = f"""[{','.join(f'"{p}"' for p in propositionsList)}]"""
+            print("Propositions:", propositions)
+            Prompt = question_text + "\n" + "Propositions:" + "\n" + "`"+"`"+"`" + propositions + "\n" + "Reflichis bien avant de me donner la reponse, car la réponse doit impérativement être correcte."
+            print("Prompt:", Prompt)
+        else:
+            propositionsList = []
+            Prompt = question_text
+            print("Prompt:", Prompt)
+    except Exception as e:
+        print(f"Error while processing propositions: {e}")
+        Prompt = question_text
+        print("Prompt:", Prompt)
+    lines = Prompt.strip().split("\n")
+    Ask_ChatGPT(ChatGPT, lines)
+    sleep(2)
