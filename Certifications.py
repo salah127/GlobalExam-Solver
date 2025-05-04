@@ -75,16 +75,6 @@ PROMPT_MESSAGE2 = """
 
 
 
-def Ask_ChatGPT(ChatGPT, Prompt):
-    WebDriverWait(ChatGPT, 20).until(
-            EC.presence_of_element_located((By.XPATH, "//div[@id='prompt-textarea']"))
-        )
-    chat_input = ChatGPT.find_element(By.XPATH, "//div[@id='prompt-textarea']")
-    for i, line in enumerate(Prompt):
-        chat_input.send_keys(line)
-        if i < len(Prompt):
-            chat_input.send_keys(Keys.SHIFT, Keys.ENTER)
-    chat_input.send_keys(PROMPT_MESSAGE2)
 
 
 
