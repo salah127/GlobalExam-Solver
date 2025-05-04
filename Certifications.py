@@ -166,4 +166,22 @@ def Exercice_01(driver, ChatGPT, target, targets):
     print("Response:", response_list)
     print("len(Response_wrapper):", len(response_list))
     print("len(propositionsList):", len(propositionsList))
+    while (len(response_list) != len(propositionsList)) or not(all(item in propositionsList for item in response_list)):
+        Prompt = f"""La longueur de la liste de ta réponse doit être égale à la longueur des propositions, dans cet exemple la longueur est {len(propositionsList)}. Elle doit aussi avoir les mêmes valeurs, c'est juste que tu les mets dans le bon ordre.
+        De ces propositions :
+        """ + propositions + "\n" + "Reflichis bien avant de me donner la reponse, car la réponse doit impérativement être correcte."
+        lines = Prompt.strip().split("\n")
+        Ask_ChatGPT(ChatGPT, lines)
+        sleep(2)
+        Response_w = WebDriverWait(ChatGPT, 30).until(
+                            EC.presence_of_all_elements_located((By.CSS_SELECTOR, "div.markdown.prose.dark\\:prose-invert.w-full.break-words.light > p"))
+                        )[-1]
+        print("Response_wrapper:", Response_w)
+        Response = Response_w.text
+        try:
+            response_list = json.loads(Response)
+        except json.JSONDecodeError as e:
+            print(f"Error decoding JSON response: {e}")
+            response_list = []
+        print("response_list:")
     
