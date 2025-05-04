@@ -221,4 +221,5 @@ def Exercice_01(driver, ChatGPT, target, targets):
                 print("Stale element detected. Re-locating the button...")
             except Exception as e:
                 print(f"An error occurred: {e}")
-    
+    else:
+        print("Response n'est pas une liste valide ou est vide.")
