@@ -88,7 +88,37 @@ def Ask_ChatGPT(ChatGPT, Prompt):
 
 
 
+# Login to the global exam website with the user and password
+def login_globalexam(driver, username, password):
+    try:
+        # Locate the email input field and enter the username
+        email_field = WebDriverWait(driver, 20).until(
+            EC.presence_of_element_located((By.NAME, "email"))
+        ) if driver.find_elements(By.NAME, "email") else None
+        if not email_field:
+            raise Exception("Email input field not found.")
+        email_field.send_keys(username)
 
+        # Locate the password input field and enter the password
+        password_field = WebDriverWait(driver, 20).until(
+            EC.presence_of_element_located((By.NAME, "password"))
+        )
+        password_field.send_keys(password)
+
+        # Locate the login button and click it
+        login_button = WebDriverWait(driver, 20).until(
+            EC.element_to_be_clickable((By.XPATH, "//button[@type='submit']"))
+        )
+        login_button.click()
+
+        # Wait for the dashboard to load after login
+        WebDriverWait(driver, 20).until(
+            EC.presence_of_element_located((By.CLASS_NAME, "bg-default-gradient"))
+        )
+        print("Login successful, redirected to the dashboard.")
+    except Exception as e:
+        print(f"Error during login: {e}")
+    sleep(2)
     
     
 
