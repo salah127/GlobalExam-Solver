@@ -184,4 +184,41 @@ def Exercice_01(driver, ChatGPT, target, targets):
             print(f"Error decoding JSON response: {e}")
             response_list = []
         print("response_list:")
+    if isinstance(response_list, list) and response_list:
+        for item in response_list:
+            try:
+                buttons = proposition_container.find_elements(By.CSS_SELECTOR, "button[data-draggable-item-id]")
+                for button in buttons:
+                    print(f"Button : {button}")
+                    print(f"Button et item: {button.text.strip()} == {item}")
+                    if button.text.strip().lower() == item.lower():
+                        if len(targets) > 1:
+                            for target in targets:
+                                print(f"target: {target}")
+                                driver.execute_script("arguments[0].scrollIntoView({behavior: 'smooth', block: 'center'});", target)
+                                actions = ActionChains(driver)
+                                actions.click_and_hold(button).pause(0.3).release().perform()
+                                sleep(1)
+                                break
+                        else:
+                            target = driver.find_element(By.CSS_SELECTOR, "div[role='textbox'], .drop-zone, .dashed-border-box:not(:has(*))")
+                            print(f"target: {target}")
+                            driver.execute_script("arguments[0].scrollIntoView({behavior: 'smooth', block: 'center'});", target)
+                            sleep(0.5)
+                            actions = ActionChains(driver)
+                            # Get the target's dimensions and calculate the bottom-right corner
+                            target_location = target.location
+                            target_size = target.size
+                            end_x = target_location['x'] + target_size['width'] - (target_size['width'] / 4)
+                            end_y = target_location['y'] + target_size['height'] - (target_size['height'] / 4)
+                            # Move the element to the bottom-right corner of the drop zone
+                            actions.click_and_hold(button).pause(0.3).move_by_offset(end_x - button.location['x'], end_y - button.location['y']).pause(0.3).release().perform()
+                            print(f"click: done")
+                            break
+                    else:
+                        continue
+            except StaleElementReferenceException:
+                print("Stale element detected. Re-locating the button...")
+            except Exception as e:
+                print(f"An error occurred: {e}")
     
