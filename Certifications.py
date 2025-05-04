@@ -70,7 +70,6 @@ Réponse deteter (à éviter) :
 """
 
 PROMPT_MESSAGE2 = """
-
 """
 
 
