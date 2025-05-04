@@ -154,3 +154,16 @@ def Exercice_01(driver, ChatGPT, target, targets):
     lines = Prompt.strip().split("\n")
     Ask_ChatGPT(ChatGPT, lines)
     sleep(2)
+    Response_wrapper = WebDriverWait(ChatGPT, 20).until(
+                            EC.presence_of_all_elements_located((By.CSS_SELECTOR, "div.markdown.prose.dark\\:prose-invert.w-full.break-words.light > p"))
+                        )[-1]
+    print("Response_wrapper:", Response_wrapper)
+    Response = Response_wrapper.text
+    print("Response:", Response)
+    sleep(2)
+    print("Propositions:" , propositionsList)
+    response_list = json.loads(Response)
+    print("Response:", response_list)
+    print("len(Response_wrapper):", len(response_list))
+    print("len(propositionsList):", len(propositionsList))
+    
