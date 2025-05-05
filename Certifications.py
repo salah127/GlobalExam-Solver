@@ -313,3 +313,5 @@ def solve_next_exercice(driver, ChatGPT):
         print(f"Error clicking 'Rejouer l'activité' button: {e}")
     
     sleep(10)
+
+
