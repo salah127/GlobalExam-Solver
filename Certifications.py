@@ -12,6 +12,7 @@ from selenium.webdriver.firefox.service import Service as FirefoxService
 import undetected_chromedriver as uc
 import json 
 from selenium.common.exceptions import StaleElementReferenceException
+from bs4 import BeautifulSoup
 # from builtins import print
 
 
@@ -70,6 +71,7 @@ Réponse deteter (à éviter) :
 """
 
 PROMPT_MESSAGE2 = """
+
 """
 
 
@@ -118,18 +120,41 @@ def login_globalexam(driver, username, password):
     except Exception as e:
         print(f"Error during login: {e}")
     sleep(2)
-    
-    
 
 def Exercice_01(driver, ChatGPT, target, targets):
-    question_wrapper = WebDriverWait(driver, 20).until(
+    try:
+            question_wrapper = WebDriverWait(driver, 20).until(
                 EC.presence_of_element_located((By.ID, "question-wrapper"))
             )
+            div_element = WebDriverWait(driver, 20).until(
+                EC.presence_of_element_located((By.CSS_SELECTOR, "div.bullet-list"))
+                )
+            # Locate the primary target drop zone
+            target = driver.find_element(By.CSS_SELECTOR, "div[role='textbox'], .drop-zone, .dashed-border-box:not(:has(*))")
+            # Locate all potential drop zones
+            targets = question_wrapper.find_elements(By.CSS_SELECTOR, "span.drop-zone")
+    except Exception as e:
+        print(f"Error locating additional drop zones: {e}")
+        targets = []
+        target = None
+    div_html = div_element.get_attribute("innerHTML")
     try:
-        question_text = question_wrapper.text
+        soup = BeautifulSoup(div_html, "html.parser")
+        for span in soup.find_all("span", class_="drop-zone"):
+            span.replace_with("...............")
+
+        # Get the modified text
+        question_text = soup.get_text(separator=" ").strip()
+        print(question_text)
+        
+        
+        # question_text = question_wrapper.text
         question_text = f"""Question: 
         {question_text}"""
         print("Question:", question_text)
+        # question_text = f"""Question: 
+        # {question_text}"""
+        # print("Question:", question_text)
         proposition_container = WebDriverWait(driver, 20).until(
             EC.presence_of_element_located((By.CSS_SELECTOR, "div[data-name='exam-answer-container']"))
         )
