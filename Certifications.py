@@ -247,3 +247,44 @@ def Exercice_01(driver, ChatGPT, target, targets):
                 print(f"An error occurred: {e}")
     else:
         print("Response n'est pas une liste valide ou est vide.")
+
+
+
+
+def Exercice_02(driver, ChatGPT, question_wrapper):
+    question_text = question_wrapper.text
+    lines = question_text.strip().split("\n")
+    Ask_ChatGPT(ChatGPT, lines)
+    sleep(2)
+    Response_wrapper = WebDriverWait(ChatGPT, 20).until(
+                            EC.presence_of_all_elements_located((By.CSS_SELECTOR, "div.markdown.prose.dark\\:prose-invert.w-full.break-words.light > p"))
+                        )[-1]
+    print("Response_wrapper:", Response_wrapper)
+    sleep(2)
+    Response = Response_wrapper.text
+    print("Response:", Response)
+    sleep(2)
+    response_list = json.loads(Response)
+    if isinstance(response_list, list) and response_list: 
+        sleep(2)
+        print("Response:", response_list)
+        for item in response_list:
+            print(f"Item: {item}")
+            buttons = question_wrapper.find_elements(By.CSS_SELECTOR, "label[for]")
+            for button in buttons:
+                if button.text.strip() == item:
+                    print(f"Button: {button}")
+                    actions = ActionChains(driver)
+                    # Scroll to the button and click it
+                    driver.execute_script("arguments[0].scrollIntoView(true);", button)
+                    driver.execute_script("arguments[0].scrollIntoView({behavior: 'smooth', block: 'center'});", button)
+                    sleep(0.5)
+                    WebDriverWait(driver, 10).until(EC.element_to_be_clickable(button))
+                    button.click()
+                    print(f"Click: done")
+                # Re-locate the question wrapper to avoid stale element reference
+
+                    if button:
+                        print(f"Button text: {button.text.strip()}")
+                    else:
+                        print(f"Button with text '{button   }' not found.")
