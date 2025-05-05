@@ -288,30 +288,3 @@ def Exercice_02(driver, ChatGPT, question_wrapper):
                         print(f"Button text: {button.text.strip()}")
                     else:
                         print(f"Button with text '{button   }' not found.")
-
-def solve_next_exercice(driver, ChatGPT):
-    driver.get("https://general.global-exam.com/certificates")
-    sleep(2)
-    try:
-        retry_button = WebDriverWait(driver, 10).until(
-            EC.element_to_be_clickable((By.XPATH, "//button[contains(@class, 'button-solid-primary-small') and text()='Retenter']"))
-        )
-        retry_button.click()
-        print("Clicked on 'Retenter' button.")
-    except Exception as e:
-        print(f"Error clicking 'Retenter' button: {e}")
-        
-    try:
-        replay_button = WebDriverWait(driver, 10).until(
-            EC.presence_of_element_located((By.XPATH, "//button[contains(@class, 'relative overflow-hidden group inline-flex justify-center font-bold rounded-full') and .//span[text()=\"Rejouer l'activité\"]]"))
-        )
-        driver.execute_script("arguments[0].scrollIntoView({behavior: 'smooth', block: 'center'});", replay_button)
-        WebDriverWait(driver, 10).until(EC.element_to_be_clickable((By.XPATH, "//button[contains(@class, 'relative overflow-hidden group inline-flex justify-center font-bold rounded-full') and .//span[text()=\"Rejouer l'activité\"]]")))
-        replay_button.click()
-        print("Clicked on 'Rejouer l'activité' button.")
-    except Exception as e:
-        print(f"Error clicking 'Rejouer l'activité' button: {e}")
-    
-    sleep(10)
-
-
