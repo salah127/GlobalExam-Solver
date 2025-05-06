@@ -122,30 +122,30 @@ def login_globalexam(driver, username, password):
     sleep(2)
 
 def Exercice_01(driver, ChatGPT, target, targets):
-    try:
-            question_wrapper = WebDriverWait(driver, 20).until(
+    question_wrapper = WebDriverWait(driver, 20).until(
                 EC.presence_of_element_located((By.ID, "question-wrapper"))
             )
+    try:
             div_element = WebDriverWait(driver, 20).until(
                 EC.presence_of_element_located((By.CSS_SELECTOR, "div.bullet-list"))
                 )
-            # Locate the primary target drop zone
-            target = driver.find_element(By.CSS_SELECTOR, "div[role='textbox'], .drop-zone, .dashed-border-box:not(:has(*))")
-            # Locate all potential drop zones
-            targets = question_wrapper.find_elements(By.CSS_SELECTOR, "span.drop-zone")
     except Exception as e:
-        print(f"Error locating additional drop zones: {e}")
-        targets = []
-        target = None
-    div_html = div_element.get_attribute("innerHTML")
+        print(f"Error locating addsitional drop zones: {e}")
+    question_text = question_wrapper.text
+
     try:
-        soup = BeautifulSoup(div_html, "html.parser")
-        for span in soup.find_all("span", class_="drop-zone"):
-            span.replace_with("...............")
+        try:
+            div_html = div_element.get_attribute("innerHTML")
+            soup = BeautifulSoup(div_html, "html.parser")
+            print("soup:", soup)
+            for span in soup.find_all("span", class_="drop-zone"):
+                span.replace_with("...............")
+            question_text = soup.get_text(separator=" ").strip()
+        except Exception as e:
+            print(f"Error while processing div element: {e}")
 
         # Get the modified text
-        question_text = soup.get_text(separator=" ").strip()
-        print(question_text)
+            
         
         
         # question_text = question_wrapper.text
@@ -250,7 +250,6 @@ def Exercice_01(driver, ChatGPT, target, targets):
 
 
 
-
 def Exercice_02(driver, ChatGPT, question_wrapper):
     question_text = question_wrapper.text
     lines = question_text.strip().split("\n")
@@ -288,3 +287,306 @@ def Exercice_02(driver, ChatGPT, question_wrapper):
                         print(f"Button text: {button.text.strip()}")
                     else:
                         print(f"Button with text '{button   }' not found.")
+
+def solve_next_exercice(driver, ChatGPT):
+    driver.get("https://general.global-exam.com/certificates")
+    # sleep(2)
+    # try:
+    #     retry_button = WebDriverWait(driver, 10).until(
+    #         EC.element_to_be_clickable((By.XPATH, "//button[contains(@class, 'button-solid-primary-small') and text()='Retenter']"))
+    #     )
+    #     retry_button.click()
+    #     print("Clicked on 'Retenter' button.")
+    # except Exception as e:
+    #     print(f"Error clicking 'Retenter' button: {e}")
+        
+    # try:
+    #     replay_button = WebDriverWait(driver, 10).until(
+    #         EC.presence_of_element_located((By.XPATH, "//button[contains(@class, 'relative overflow-hidden group inline-flex justify-center font-bold rounded-full') and .//span[text()=\"Rejouer l'activité\"]]"))
+    #     )
+    #     driver.execute_script("arguments[0].scrollIntoView({behavior: 'smooth', block: 'center'});", replay_button)
+    #     WebDriverWait(driver, 10).until(EC.element_to_be_clickable((By.XPATH, "//button[contains(@class, 'relative overflow-hidden group inline-flex justify-center font-bold rounded-full') and .//span[text()=\"Rejouer l'activité\"]]")))
+    #     replay_button.click()
+    #     print("Clicked on 'Rejouer l'activité' button.")
+    # except Exception as e:
+    #     print(f"Error clicking 'Rejouer l'activité' button: {e}")
+    
+    sleep(3)
+        
+        # Locate the parent div
+    parent_div = WebDriverWait(driver, 20).until(
+        EC.presence_of_element_located((By.CSS_SELECTOR, "div.grid.gap-6.grid-cols-1.sm\\:grid-cols-2.md\\:grid-cols-3.lg\\:grid-cols-4"))
+    )
+
+    # Get all child div elements
+    child_divs = parent_div.find_elements(By.CSS_SELECTOR, "div.card")
+
+    for child in child_divs:
+        ChatGPT.get("https://chatgpt.com/c/681368bb-23c8-8002-a76b-678d4b789960")
+        print("Redirected driver to the specified URL.")
+        sleep(1)
+        
+        
+        child.click()
+        print("Clicked on a child element.")
+        sleep(1)
+        specific_element = WebDriverWait(driver, 20).until(
+            EC.element_to_be_clickable((By.XPATH, "//div[contains(@class, 'flex items-center justify-between p-6 cursor-pointer') and .//p[contains(text(),'Certification')]]"))
+        )
+        driver.execute_script("arguments[0].scrollIntoView({behavior: 'smooth', block: 'center'});", specific_element)
+        specific_element.click()
+        print("Clicked on the 'Certification' element.")
+        sleep(1)
+        
+        certification_element = WebDriverWait(driver, 20).until(
+            EC.element_to_be_clickable((By.XPATH, "//div[@class='group flex flex-col items-center cursor-pointer' and .//p[text()='Certification']]"))
+        )
+        certification_element.click()
+        print("Clicked on the 'Certification' element with the specified class.")
+        
+        sleep(1)
+        for i in range(30):
+            try:
+                question_wrapper = WebDriverWait(driver, 20).until(
+                    EC.presence_of_element_located((By.ID, "question-wrapper"))
+                )
+                # Locate the primary target drop zone
+                target = driver.find_element(By.CSS_SELECTOR, "div[role='textbox'], .drop-zone, .dashed-border-box:not(:has(*))")
+                # Locate all potential drop zones
+                targets = question_wrapper.find_elements(By.CSS_SELECTOR, "span.drop-zone")
+            except Exception as e:
+                print(f"Error locating additional drop zones: {e}")
+                targets = []
+                target = None
+        
+            if target or targets:
+                Exercice_01(driver, ChatGPT, target, targets)
+                try:
+                    validate_button = WebDriverWait(driver, 20).until(
+                    EC.element_to_be_clickable((By.XPATH, "//button[contains(@class, 'relative overflow-hidden group inline-flex justify-center font-bold rounded-full') and .//span[text()='Valider']]"))
+                    )
+                    driver.execute_script("arguments[0].scrollIntoView({behavior: 'smooth', block: 'center'});", validate_button)
+                    validate_button.click()
+                    print("Clicked on 'Valider' button.")
+                    sleep(2)
+                except Exception as e:
+                    print(f"Error clicking 'Valider' button: {e}")
+            else:
+                Exercice_02(driver, ChatGPT, question_wrapper)
+                try:
+                    validate_button = WebDriverWait(driver, 20).until(
+                        EC.element_to_be_clickable((By.XPATH, "//button[contains(@class, 'relative overflow-hidden group inline-flex justify-center font-bold rounded-full') and .//span[text()='Valider']]"))
+                    )
+                    driver.execute_script("arguments[0].scrollIntoView({behavior: 'smooth', block: 'center'});", validate_button)
+                    validate_button.click()
+                    print("Clicked on 'Valider' button.")
+                    sleep(2)
+                except Exception as e:
+                    print(f"Error clicking 'Valider' button: {e}")
+    print("done!!!")
+
+
+
+
+# Create the main window
+window = tk.Tk()
+window.title("GlobalExam Solver")
+window.geometry("1200x620")
+
+# ==== Add a solve for exercice tab ====
+
+# Add title
+title_label = tk.Label(window, text="Solve every exercice possible on GlobalExam !", font=("Arial", "12", "bold"))
+title_label.pack()
+title_label.place(x=350, y=20)
+
+# Add prompt for the user and the password
+username_label = tk.Label(window, text="Username:")
+username_label.pack()
+username_entry = tk.Entry(window)
+username_entry.pack()
+password_label = tk.Label(window, text="Password:")
+password_label.pack()
+password_entry = tk.Entry(window, show="*")
+password_entry.pack()
+username_label.place(x=100, y=50)
+username_entry.place(x=100, y=80)
+password_label.place(x=100, y=110)
+password_entry.place(x=100, y=140)
+
+
+# Add choice for web breowser
+browser_label = tk.Label(window, text="Web Browser (default Firefox) :")
+browser_label.pack()
+browser_list = tk.Listbox(window, height=1)
+
+# Add element for the list
+browser_list.insert(0, "Firefox")
+
+# Select default web browser
+browser_list.selection_set(0,0)
+
+browser_list.pack()
+browser_label.place(x=100, y=200)
+browser_list.place(x=100, y=230)
+
+
+
+# Create the subdomain label and entry
+subdomain_label = tk.Label(window, text="Choisissez soit :")
+subdomain_label1 = tk.Label(window, text="grammar - subdomain_entry - vocabulary", font=("Arial", "10", "bold"))
+subdomain_label.pack()
+subdomain_label1.pack()
+subdomain_entry = tk.Entry(window)
+subdomain_entry.insert(0, "grammar")
+subdomain_entry.pack()
+subdomain_label.place(x=350, y=140)
+subdomain_label1.place(x=350, y=155)
+subdomain_entry.place(x=350, y=180)
+
+
+
+def on_solve_next_exercice():
+    try:
+        username = username_entry.get()
+        password = password_entry.get()
+        googlelogin = ""
+        googlepassword = ""
+
+
+        
+        root = tk.Tk()
+        screen_width = root.winfo_screenwidth()
+        screen_height = root.winfo_screenheight()
+        root.destroy()
+
+        # Définir demi-largeur
+        half_width = screen_width // 2
+
+        driver = uc.Chrome(driver_executable_path=ChromeDriverManager().install())
+        driver.set_page_load_timeout(3000)
+        driver.implicitly_wait(10)
+        driver.get("https://auth.global-exam.com/login")
+        driver.set_window_size(half_width, screen_height)
+        driver.set_window_position(0, 0)
+        sleep(1)
+        
+        ChatGPT = uc.Chrome(driver_executable_path=ChromeDriverManager().install())
+        ChatGPT.set_page_load_timeout(3000)
+        ChatGPT.implicitly_wait(10)
+        ChatGPT.set_window_size(half_width, screen_height)
+        ChatGPT.set_window_position(half_width, 0)
+        # ChatGPT.get("https://chatgpt.com/)")
+        ChatGPT.get("https://chatgpt.com/)")
+        sleep(2)
+        
+        # Locate and click the "Se connecter" button
+        try:
+            login_butto = WebDriverWait(ChatGPT, 10).until(
+                EC.element_to_be_clickable((By.XPATH, "//button[contains(@class, 'btn-primary') and contains(@class, 'btn-large') and .//div[text()='Se connecter']]"))
+            )
+            login_butto.click()
+            sleep(2)
+            login_button = WebDriverWait(ChatGPT, 10).until(
+                EC.element_to_be_clickable((By.XPATH, "//button[contains(@class, 'btn-primary') and @data-testid='login-button']"))
+            )
+            login_button.click()
+            print("Clicked on 'Se connecter' button.")
+        except Exception as e:
+            print(f"Error: 'Se connecter' button not found or not clickable. Details: {e}")
+        # login_button.click()
+        # print("Clicked on 'Se connecter' button.")
+        # sleep(5)
+        # Locate and click the "Se connecter" button
+        # login_button = WebDriverWait(ChatGPT, 10).until(
+        #     EC.element_to_be_clickable((By.XPATH, "//button[contains(@class, 'btn-primary') and @data-testid='mobile-login-button']"))
+        # )
+        
+        # login_button.click()
+        # ChatGPT.get("https://auth.openai.com/authorize?audience=https%3A%2F%2Fapi.openai.com%2Fv1&client_id=TdJIcbe16WoTHtN95nyywh5E4yOo6ItG&country_code=FR&device_id=50e82e10-92b2-4679-b6cb-69f7868e4bcf&ext-login-allow-phone=true&ext-oai-did=50e82e10-92b2-4679-b6cb-69f7868e4bcf&ext-signup-allow-phone=true&prompt=login&redirect_uri=https%3A%2F%2Fchatgpt.com%2Fapi%2Fauth%2Fcallback%2Fopenai&response_type=code&scope=openid+email+profile+offline_access+model.request+model.read+organization.read+organization.write&screen_hint=login&state=Qm87FED2-o2Ao0a6NJj00S6aNCy26Szv9lyX-U1yLpk&flow=treatment")
+            # Click on the 'Continuer avec Google' button
+        try:
+            google_button = WebDriverWait(ChatGPT, 10).until(
+                EC.element_to_be_clickable((By.XPATH, "//button[@name='intent' and @value='google' and .//div[contains(@class, '_logoPositioner_gdh4y_1')]]"))
+            )
+            google_button.click()
+            print("Clicked on 'Continuer avec Google' button.")
+        except Exception as e:
+            print(f"Error: 'Continuer avec Google' button not found or not clickable. Details: {e}")
+
+        # Type the username in the email input field
+        email_input = WebDriverWait(ChatGPT, 10).until(
+            EC.presence_of_element_located((By.ID, "identifierId"))
+        )
+        email_input.send_keys(googlelogin)
+        
+        next_button = WebDriverWait(ChatGPT, 10).until(
+            EC.element_to_be_clickable((By.XPATH, "//button[contains(@class, 'VfPpkd-LgbsSe') and .//span[text()='Suivant']]"))
+        )
+        next_button.click()
+        sleep(3)
+        
+        password_input = WebDriverWait(ChatGPT, 10).until(
+            EC.presence_of_element_located((By.NAME, "Passwd"))
+        )
+        password_input.send_keys(googlepassword)
+        next_button = WebDriverWait(ChatGPT, 10).until(
+            EC.element_to_be_clickable((By.XPATH, "//button[contains(@class, 'VfPpkd-LgbsSe') and .//span[text()='Suivant']]"))
+        )
+        next_button.click()
+        sleep(2)
+        try:
+            login_button = WebDriverWait(ChatGPT, 10).until(
+                EC.element_to_be_clickable((By.XPATH, "//button[contains(@class, 'btn-primary') and @data-testid='login-button']"))
+            )
+            login_button.click()
+            google_button = WebDriverWait(ChatGPT, 10).until(
+            EC.element_to_be_clickable((By.XPATH, "//button[contains(@class, 'social-btn') and .//span[text()='Continuer avec Google']]"))
+        )
+            google_button.click()
+            print("Clicked on 'Se connecter' button.")
+        except Exception as e:
+            print(f"Error: 'Se connecter' button not found or not clickable. Details: {e}")
+        
+        ChatGPT.get("https://chatgpt.com/c/68187314-b408-8004-a82a-49c5ae53d291")
+        print("Clicked on 'Suivant' button.")
+        sleep(3)
+
+        print(r"/!\ Do not close this window ! /!\ " + "\n\n")
+        
+        # lines = PROMPT_MESSAGE1.strip().split("\n")
+        # Ask_ChatGPT(ChatGPT, lines)
+        login_globalexam(driver, username, password)
+        try:
+            try:
+                continue_button = WebDriverWait(driver, 3).until(
+                    EC.element_to_be_clickable((By.XPATH, "//span[text()='Continuer sans accepter']"))
+                )
+                continue_button.click()
+                print("Clicked on 'Continuer sans accepter'.")
+            except Exception as e:
+                pass
+        except:
+            pass
+        while True:
+            solve_next_exercice(driver, ChatGPT)
+
+
+    except Exception as e:
+        print(f"Une erreur s'est produite : {e}")
+        
+# Create the solve next exercice button
+solve_next_exercice_button = tk.Button(window, text="Solve exercice", command=on_solve_next_exercice)
+solve_next_exercice_button.pack()
+solve_next_exercice_button.place(x=350, y=410)
+
+# add a quit button
+quit_button = tk.Button(window, text="Exit", command=window.quit)
+quit_button.pack()
+quit_button.place(x=600, y=500)
+
+# Print a message to the user to not close the window
+print("/!\\ Do not close this window ! /!\\ \n\n")
+
+# Start the main loop
+window.mainloop()
