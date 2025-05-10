@@ -121,7 +121,7 @@ def login_globalexam(driver, username, password):
         print(f"Error during login: {e}")
     sleep(2)
 
-def Exercice_01(driver, ChatGPT, target, targets, h4):
+def get_answer_Exercice_01(driver, ChatGPT, target, targets, h4):
     print("child:", h4) 
     question_wrapper = WebDriverWait(driver, 20).until(
                 EC.presence_of_element_located((By.ID, "question-wrapper"))
