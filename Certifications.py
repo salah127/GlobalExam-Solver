@@ -489,6 +489,19 @@ password_label.place(x=900, y=160)
 password_entry.place(x=900, y=190)
 
 
+# Create the subdomain label and entry
+subdomain_label = tk.Label(window, text="Choisissez soit :")
+subdomain_label1 = tk.Label(window, text="grammar - subdomain_entry - vocabulary", font=("Arial", "10", "bold"))
+subdomain_label.pack()
+subdomain_label1.pack()
+subdomain_entry = tk.Entry(window)
+subdomain_entry.insert(0, "grammar")
+subdomain_entry.pack()
+subdomain_label.place(x=350, y=140)
+subdomain_label1.place(x=350, y=155)
+subdomain_entry.place(x=350, y=180)
+
+
 
 def on_solve_next_exercice():
     try:
