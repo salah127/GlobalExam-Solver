@@ -427,7 +427,7 @@ def solve_next_exercice(driver, ChatGPT):
                 except Exception as e:
                     print(f"Error clicking 'Valider' button: {e}")
             else:
-                Exercice_02(driver, ChatGPT, question_wrapper)
+                get_answer_Exercice_02(driver, ChatGPT, question_wrapper)
                 try:
                     validate_button = WebDriverWait(driver, 20).until(
                         EC.element_to_be_clickable((By.XPATH, "//button[contains(@class, 'relative overflow-hidden group inline-flex justify-center font-bold rounded-full') and .//span[text()='Valider']]"))
