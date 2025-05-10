@@ -353,43 +353,22 @@ def get_answer_Exercice_02(driver, ChatGPT, question_wrapper, h4):
         print("Response:", response_list)
 
 def solve_next_exercice(driver, ChatGPT):
-    driver.get("https://general.global-exam.com/certificates")
-    # sleep(2)
-    # try:
-    #     retry_button = WebDriverWait(driver, 10).until(
-    #         EC.element_to_be_clickable((By.XPATH, "//button[contains(@class, 'button-solid-primary-small') and text()='Retenter']"))
-    #     )
-    #     retry_button.click()
-    #     print("Clicked on 'Retenter' button.")
-    # except Exception as e:
-    #     print(f"Error clicking 'Retenter' button: {e}")
-        
-    # try:
-    #     replay_button = WebDriverWait(driver, 10).until(
-    #         EC.presence_of_element_located((By.XPATH, "//button[contains(@class, 'relative overflow-hidden group inline-flex justify-center font-bold rounded-full') and .//span[text()=\"Rejouer l'activité\"]]"))
-    #     )
-    #     driver.execute_script("arguments[0].scrollIntoView({behavior: 'smooth', block: 'center'});", replay_button)
-    #     WebDriverWait(driver, 10).until(EC.element_to_be_clickable((By.XPATH, "//button[contains(@class, 'relative overflow-hidden group inline-flex justify-center font-bold rounded-full') and .//span[text()=\"Rejouer l'activité\"]]")))
-    #     replay_button.click()
-    #     print("Clicked on 'Rejouer l'activité' button.")
-    # except Exception as e:
-    #     print(f"Error clicking 'Rejouer l'activité' button: {e}")
-    
-    sleep(3)
-        
-        # Locate the parent div
     parent_div = WebDriverWait(driver, 20).until(
         EC.presence_of_element_located((By.CSS_SELECTOR, "div.grid.gap-6.grid-cols-1.sm\\:grid-cols-2.md\\:grid-cols-3.lg\\:grid-cols-4"))
     )
 
     # Get all child div elements
     child_divs = parent_div.find_elements(By.CSS_SELECTOR, "div.card")
+    
 
     for child in child_divs:
-        ChatGPT.get("https://chatgpt.com/c/681368bb-23c8-8002-a76b-678d4b789960")
+        h4_elements = child.find_element(By.TAG_NAME, "h4")
+        h4 = h4_elements.text
+        
+        # ChatGPT.get("https://chatgpt.com/c/681368bb-23c8-8002-a76b-678d4b789960")
         print("Redirected driver to the specified URL.")
         sleep(1)
-        
+        print("child:", child.text)
         
         child.click()
         print("Clicked on a child element.")
@@ -410,6 +389,19 @@ def solve_next_exercice(driver, ChatGPT):
         
         sleep(1)
         for i in range(30):
+            driver.get("https://general.global-exam.com/levels/content/9584")
+            specific_element = WebDriverWait(driver, 20).until(
+            EC.element_to_be_clickable((By.XPATH, "//div[contains(@class, 'flex items-center justify-between p-6 cursor-pointer') and .//p[contains(text(),'Certification')]]"))
+        )
+            driver.execute_script("arguments[0].scrollIntoView({behavior: 'smooth', block: 'center'});", specific_element)
+            specific_element.click()
+            print("Clicked on the 'Certification' element.")
+            sleep(1)
+            
+            certification_element = WebDriverWait(driver, 20).until(
+                EC.element_to_be_clickable((By.XPATH, "//div[@class='group flex flex-col items-center cursor-pointer' and .//p[text()='Certification']]"))
+            )
+            certification_element.click()
             try:
                 question_wrapper = WebDriverWait(driver, 20).until(
                     EC.presence_of_element_located((By.ID, "question-wrapper"))
@@ -422,9 +414,8 @@ def solve_next_exercice(driver, ChatGPT):
                 print(f"Error locating additional drop zones: {e}")
                 targets = []
                 target = None
-        
             if target or targets:
-                Exercice_01(driver, ChatGPT, target, targets)
+                get_answer_Exercice_01(driver, ChatGPT, target, targets)
                 try:
                     validate_button = WebDriverWait(driver, 20).until(
                     EC.element_to_be_clickable((By.XPATH, "//button[contains(@class, 'relative overflow-hidden group inline-flex justify-center font-bold rounded-full') and .//span[text()='Valider']]"))
