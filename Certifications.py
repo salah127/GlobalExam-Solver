@@ -13,6 +13,7 @@ import undetected_chromedriver as uc
 import json 
 from selenium.common.exceptions import StaleElementReferenceException
 from bs4 import BeautifulSoup
+from pymongo import MongoClient
 # from builtins import print
 
 
