@@ -443,7 +443,6 @@ def solve_next_exercice(driver, ChatGPT):
 
 
 
-
 # Create the main window
 window = tk.Tk()
 window.title("GlobalExam Solver")
@@ -457,6 +456,9 @@ title_label.pack()
 title_label.place(x=350, y=20)
 
 # Add prompt for the user and the password
+GlobalEx = tk.Label(window, text="GlobalExam:", font=("Arial", "12", "bold"))
+GlobalEx.pack()
+GlobalEx.place(x=80, y=70)
 username_label = tk.Label(window, text="Username:")
 username_label.pack()
 username_entry = tk.Entry(window)
@@ -465,40 +467,26 @@ password_label = tk.Label(window, text="Password:")
 password_label.pack()
 password_entry = tk.Entry(window, show="*")
 password_entry.pack()
-username_label.place(x=100, y=50)
-username_entry.place(x=100, y=80)
-password_label.place(x=100, y=110)
-password_entry.place(x=100, y=140)
+username_label.place(x=100, y=100)
+username_entry.place(x=100, y=130)
+password_label.place(x=100, y=160)
+password_entry.place(x=100, y=190)
 
-
-# Add choice for web breowser
-browser_label = tk.Label(window, text="Web Browser (default Firefox) :")
-browser_label.pack()
-browser_list = tk.Listbox(window, height=1)
-
-# Add element for the list
-browser_list.insert(0, "Firefox")
-
-# Select default web browser
-browser_list.selection_set(0,0)
-
-browser_list.pack()
-browser_label.place(x=100, y=200)
-browser_list.place(x=100, y=230)
-
-
-
-# Create the subdomain label and entry
-subdomain_label = tk.Label(window, text="Choisissez soit :")
-subdomain_label1 = tk.Label(window, text="grammar - subdomain_entry - vocabulary", font=("Arial", "10", "bold"))
-subdomain_label.pack()
-subdomain_label1.pack()
-subdomain_entry = tk.Entry(window)
-subdomain_entry.insert(0, "grammar")
-subdomain_entry.pack()
-subdomain_label.place(x=350, y=140)
-subdomain_label1.place(x=350, y=155)
-subdomain_entry.place(x=350, y=180)
+GlobalEx = tk.Label(window, text="ChatGPT:", font=("Arial", "12", "bold"))
+GlobalEx.pack()
+GlobalEx.place(x=880, y=70)
+username_label = tk.Label(window, text="Username:")
+username_label.pack()
+username_entry = tk.Entry(window)
+username_entry.pack()
+password_label = tk.Label(window, text="Password:")
+password_label.pack()
+password_entry = tk.Entry(window, show="*")
+password_entry.pack()
+username_label.place(x=900, y=100)
+username_entry.place(x=900, y=130)
+password_label.place(x=900, y=160)
+password_entry.place(x=900, y=190)
 
 
 
