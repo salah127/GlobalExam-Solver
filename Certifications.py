@@ -121,7 +121,8 @@ def login_globalexam(driver, username, password):
         print(f"Error during login: {e}")
     sleep(2)
 
-def Exercice_01(driver, ChatGPT, target, targets):
+def Exercice_01(driver, ChatGPT, target, targets, h4):
+    print("child:", h4) 
     question_wrapper = WebDriverWait(driver, 20).until(
                 EC.presence_of_element_located((By.ID, "question-wrapper"))
             )
@@ -182,6 +183,7 @@ def Exercice_01(driver, ChatGPT, target, targets):
                             EC.presence_of_all_elements_located((By.CSS_SELECTOR, "div.markdown.prose.dark\\:prose-invert.w-full.break-words.light > p"))
                         )[-1]
     print("Response_wrapper:", Response_wrapper)
+    sleep(2)
     Response = Response_wrapper.text
     print("Response:", Response)
     sleep(2)
@@ -190,9 +192,9 @@ def Exercice_01(driver, ChatGPT, target, targets):
     print("Response:", response_list)
     print("len(Response_wrapper):", len(response_list))
     print("len(propositionsList):", len(propositionsList))
-    while (len(response_list) != len(propositionsList)) or not(all(item in propositionsList for item in response_list)):
-        Prompt = f"""La longueur de la liste de ta réponse doit être égale à la longueur des propositions, dans cet exemple la longueur est {len(propositionsList)}. Elle doit aussi avoir les mêmes valeurs, c'est juste que tu les mets dans le bon ordre.
-        De ces propositions :
+    while not Response or (len(response_list) != len(response_list)):
+        Prompt = f"""La longueur de la liste de ta réponse doit être égale à la longueur des propositions, dans cet exemple la longueur est {len(propositionsList)}.
+        voila les proposition propositions :
         """ + propositions + "\n" + "Reflichis bien avant de me donner la reponse, car la réponse doit impérativement être correcte."
         lines = Prompt.strip().split("\n")
         Ask_ChatGPT(ChatGPT, lines)
@@ -208,43 +210,76 @@ def Exercice_01(driver, ChatGPT, target, targets):
             print(f"Error decoding JSON response: {e}")
             response_list = []
         print("response_list:")
+    sleep(2)
+    while not Response or not(all(item in propositionsList for item in response_list)):
+        Prompt = f"""not """ + response_list[0] +"""
+        tu reponse doit avoir les mêmes valeurs que les propositions suivants:
+        """ + propositions + "\n" + "Reflichis bien avant de me donner la reponse, car la réponse doit impérativement être correcte."
+        lines = Prompt.strip().split("\n")
+        Ask_ChatGPT(ChatGPT, lines)
+        sleep(2)
+        Response_w = WebDriverWait(ChatGPT, 30).until(
+                            EC.presence_of_all_elements_located((By.CSS_SELECTOR, "div.markdown.prose.dark\\:prose-invert.w-full.break-words.light > p"))
+                        )[-1]
+        print("Response_wrapper:", Response_w)
+        Response = Response_w.text
+        try:
+            response_list = json.loads(Response)
+        except json.JSONDecodeError as e:
+            print(f"Error decoding JSON response: {e}")
+            response_list = []
+        print("response_list:")
+        
     if isinstance(response_list, list) and response_list:
-        for item in response_list:
-            try:
-                buttons = proposition_container.find_elements(By.CSS_SELECTOR, "button[data-draggable-item-id]")
-                for button in buttons:
-                    print(f"Button : {button}")
-                    print(f"Button et item: {button.text.strip()} == {item}")
-                    if button.text.strip().lower() == item.lower():
-                        if len(targets) > 1:
-                            for target in targets:
-                                print(f"target: {target}")
-                                driver.execute_script("arguments[0].scrollIntoView({behavior: 'smooth', block: 'center'});", target)
-                                actions = ActionChains(driver)
-                                actions.click_and_hold(button).pause(0.3).release().perform()
-                                sleep(1)
-                                break
-                        else:
-                            target = driver.find_element(By.CSS_SELECTOR, "div[role='textbox'], .drop-zone, .dashed-border-box:not(:has(*))")
-                            print(f"target: {target}")
-                            driver.execute_script("arguments[0].scrollIntoView({behavior: 'smooth', block: 'center'});", target)
-                            sleep(0.5)
-                            actions = ActionChains(driver)
-                            # Get the target's dimensions and calculate the bottom-right corner
-                            target_location = target.location
-                            target_size = target.size
-                            end_x = target_location['x'] + target_size['width'] - (target_size['width'] / 4)
-                            end_y = target_location['y'] + target_size['height'] - (target_size['height'] / 4)
-                            # Move the element to the bottom-right corner of the drop zone
-                            actions.click_and_hold(button).pause(0.3).move_by_offset(end_x - button.location['x'], end_y - button.location['y']).pause(0.3).release().perform()
-                            print(f"click: done")
-                            break
-                    else:
-                        continue
-            except StaleElementReferenceException:
-                print("Stale element detected. Re-locating the button...")
-            except Exception as e:
-                print(f"An error occurred: {e}")
+        # on doit stocké dans la base de donner
+        ######################################################################
+        try:
+            client = MongoClient("mongodb://localhost:27017/")  # Replace with your MongoDB connection string if needed
+            db = client["GlobalExamSolver"]  # Replace with your database name
+            Certificat = db["Certificat"]  # Replace with your collection name
+            Exercice = db["Exercice"]  # Replace with your collection name
+            exercice_ids = [str(exercice["_id"]) for exercice in Exercice.find({}, {"_id": 1})]
+            
+            existing_certificat = Certificat.find_one({"nom": h4})
+            if existing_certificat:
+                # If the certificate exists, get its ID
+                certif_id = existing_certificat["_id"]
+                print(f"Certificate already exists with ID: {certif_id}")
+            else:
+                Certif = {
+                    "nom": h4,
+                    "question": [],
+                }
+                db_certif = Certificat.insert_one(Certif)
+                certif_id = db_certif.inserted_id
+            existing_exercise = Exercice.find_one({"question": question_text})
+                
+            if existing_exercise:
+                # If the exercise exists, get its ID
+                Exe_id = existing_exercise["_id"]
+                print(f"Exercise already exists with ID: {Exe_id}")
+            else:
+                # If the exercise is new, insert it
+                Exe = {
+                    "question": question_text,
+                    "response": response_list,
+                }
+                print("Exe:", Exe)
+                db_Exercice = Exercice.insert_one(Exe)
+                Exe_id = db_Exercice.inserted_id  # Get the inserted exercise ID
+                print(f"New exercise inserted with ID: {Exe_id}")
+
+                # Update the certificate with the exercise ID
+                Certificat.update_one(
+                    {"_id": certif_id},
+                    {"$push": {"question": str(Exe_id)}}  # Add the exercise ID to the 'question' list
+                )
+                print(f"Certificate updated with exercise ID: {Exe_id}")
+            
+        except Exception as e:
+            print(f"Error storing response in MongoDB: {e}")
+        finally:
+            client.close()
     else:
         print("Response n'est pas une liste valide ou est vide.")
 
