@@ -472,21 +472,21 @@ username_entry.place(x=100, y=130)
 password_label.place(x=100, y=160)
 password_entry.place(x=100, y=190)
 
-GlobalEx = tk.Label(window, text="ChatGPT:", font=("Arial", "12", "bold"))
-GlobalEx.pack()
-GlobalEx.place(x=880, y=70)
-username_label = tk.Label(window, text="Username:")
-username_label.pack()
-username_entry = tk.Entry(window)
-username_entry.pack()
-password_label = tk.Label(window, text="Password:")
-password_label.pack()
-password_entry = tk.Entry(window, show="*")
-password_entry.pack()
-username_label.place(x=900, y=100)
-username_entry.place(x=900, y=130)
-password_label.place(x=900, y=160)
-password_entry.place(x=900, y=190)
+ChatGPT = tk.Label(window, text="Gmail related to ChatGPT:", font=("Arial", "12", "bold"))
+ChatGPT.pack()
+ChatGPT.place(x=880, y=70)
+username_label_chat = tk.Label(window, text="Username:")
+username_label_chat.pack()
+username_entry_chat = tk.Entry(window)
+username_entry_chat.pack()
+password_label_chat = tk.Label(window, text="Password:")
+password_label_chat.pack()
+password_entry_chat = tk.Entry(window, show="*")
+password_entry_chat.pack()
+username_label_chat.place(x=900, y=100)
+username_entry_chat.place(x=900, y=130)
+password_label_chat.place(x=900, y=160)
+password_entry_chat.place(x=900, y=190)
 
 
 # Create the subdomain label and entry
@@ -507,6 +507,9 @@ def on_solve_next_exercice():
     try:
         username = username_entry.get()
         password = password_entry.get()
+        googlelogin = username_entry_chat.get()
+        googlepassword = password_entry_chat.get()
+        
         googlelogin = ""
         googlepassword = ""
 
