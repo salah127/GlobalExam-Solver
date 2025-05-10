@@ -285,7 +285,7 @@ def get_answer_Exercice_01(driver, ChatGPT, target, targets, h4):
 
 
 
-def Exercice_02(driver, ChatGPT, question_wrapper):
+def Exercice_02(driver, ChatGPT, question_wrapper, h4):
     question_text = question_wrapper.text
     lines = question_text.strip().split("\n")
     Ask_ChatGPT(ChatGPT, lines)
