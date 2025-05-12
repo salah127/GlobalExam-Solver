@@ -169,17 +169,20 @@ def get_answer_Exercice_01(driver, ChatGPT, target, targets, h4):
             print("Propositions:", propositions)
             Prompt = question_text + "\n" + "Propositions:" + "\n" + "`"+"`"+"`" + propositions + "\n" + "Reflichis bien avant de me donner la reponse, car la réponse doit impérativement être correcte."
             print("Prompt:", Prompt)
+            lines = Prompt.strip().split("\n")
+            Ask_ChatGPT(ChatGPT, lines)
+            sleep(2)
         else:
             propositionsList = []
             Prompt = question_text
             print("Prompt:", Prompt)
+            lines = Prompt.strip().split("\n")
+            Ask_ChatGPT(ChatGPT, lines)
+            sleep(2)
     except Exception as e:
         print(f"Error while processing propositions: {e}")
         Prompt = question_text
         print("Prompt:", Prompt)
-    lines = Prompt.strip().split("\n")
-    Ask_ChatGPT(ChatGPT, lines)
-    sleep(2)
     Response_wrapper = WebDriverWait(ChatGPT, 20).until(
                             EC.presence_of_all_elements_located((By.CSS_SELECTOR, "div.markdown.prose.dark\\:prose-invert.w-full.break-words.light > p"))
                         )[-1]
@@ -291,12 +294,20 @@ def get_answer_Exercice_02(driver, ChatGPT, question_wrapper, h4):
     lines = question_text.strip().split("\n")
     Ask_ChatGPT(ChatGPT, lines)
     sleep(2)
-    Response_wrapper = WebDriverWait(ChatGPT, 20).until(
-                            EC.presence_of_all_elements_located((By.CSS_SELECTOR, "div.markdown.prose.dark\\:prose-invert.w-full.break-words.light > p"))
-                        )[-1]
-    print("Response_wrapper:", Response_wrapper)
-    sleep(2)
-    Response = Response_wrapper.text
+    try:
+        Response_wrapper = WebDriverWait(ChatGPT, 20).until(
+            EC.presence_of_all_elements_located((By.CSS_SELECTOR, "div.markdown.prose.dark\\:prose-invert.w-full.break-words.light > p"))
+        )[-1]
+        print("Response_wrapper:", Response_wrapper)
+        Response = Response_wrapper.text
+        print("Response:", Response)
+    except StaleElementReferenceException:
+        print("Stale element detected. Re-locating the Response_wrapper...")
+        Response_wrapper = WebDriverWait(ChatGPT, 20).until(
+            EC.presence_of_all_elements_located((By.CSS_SELECTOR, "div.markdown.prose.dark\\:prose-invert.w-full.break-words.light > p"))
+        )[-1]
+        Response = Response_wrapper.text
+        print("Response (after re-locating):", Response)
     print("Response:", Response)
     sleep(2)
     response_list = json.loads(Response)
@@ -354,7 +365,7 @@ def get_answer_Exercice_02(driver, ChatGPT, question_wrapper, h4):
         print("Response:", response_list)
 
 from bson import ObjectId
-def get_answers_from_db(h4):
+def get_answers_from_db(h4, question_text, propositionsList):
     response_list = []
     try:
         client = MongoClient("mongodb://localhost:27017/")  # Replace with your MongoDB connection string if needed
@@ -362,24 +373,28 @@ def get_answers_from_db(h4):
         Certificat = db["Certificat"]  # Replace with your collection name
         Exercice = db["Exercice"]
         
-        # Find the certificate with the given name (h4)
-        existing_certificat = Certificat.find_one({"nom": h4})
-        if existing_certificat:
-            question_ids = existing_certificat.get("question", [])
-            print(f"Questions for certificate '{h4}': {question_ids}")
-            for question_id in question_ids:
-                # exercise = Exercice.find_one({"_id": question_id})
-                exercise = Exercice.find_one({"_id": ObjectId(question_id)})
-                if exercise:
-                    response_list.append(exercise.get("question", ""))
-            print(f"Response list for certificate salaaaaaaaaaaaaaaaaaaaaaah '{h4}': {response_list}")
+        if propositionsList:
+            exercise = Exercice.find_one({
+                "question": question_text,
+                "response": {"$all": propositionsList}  # Ensure all responses in propositions_list are present
+            })
         else:
-            print(f"No certificate found with name '{h4}'")
+            exercise = Exercice.find_one({
+                "question": question_text
+            })
+        
+        
+        print("connected")
+        print("question_text_db:", question_text)
+        if exercise:
+            print(f"Exercise found: {exercise}")
+            return exercise.get("response", [])
+        else:
+            print(f"No Exercise found with propositions '{propositionsList}'")
     except Exception as e:
         print(f"Error retrieving questions from MongoDB: {e}")
     finally:
         client.close()
-    return response_list
 
 def answer_Exercice_01(driver, ChatGPT, target, targets, h4):
     print("child:", h4) 
@@ -439,11 +454,12 @@ def answer_Exercice_01(driver, ChatGPT, target, targets, h4):
     # Response = Response_wrapper.text
     # response_list = json.loads(Response)
     
-    response_list = get_answers_from_db(h4)
+    response_list = get_answers_from_db(h4, question_text, propositionsList)
     print("salah Response:", response_list)
     sleep(2)
     
     if isinstance(response_list, list) and response_list:
+        print("found response_list")  
         for item in response_list:
             try:
                 buttons = proposition_container.find_elements(By.CSS_SELECTOR, "button[data-draggable-item-id]")
@@ -482,6 +498,10 @@ def answer_Exercice_01(driver, ChatGPT, target, targets, h4):
                 print(f"An error occurred: {e}")
     else:
         print("Response n'est pas une liste valide ou est vide.")
+        get_answer_Exercice_01(driver, ChatGPT, target, targets, h4)
+        print("saved on data base")
+        sleep(2)
+        answer_Exercice_01(driver, ChatGPT, target, targets, h4)
         
         
 def answer_Exercice_02(driver, ChatGPT, question_wrapper, h4):
@@ -498,8 +518,9 @@ def answer_Exercice_02(driver, ChatGPT, question_wrapper, h4):
     # print("Response:", Response)
     # sleep(2)
     # response_list = json.loads(Response)
-    response_list = get_answers_from_db(h4)
-    if isinstance(response_list, list) and response_list:        
+    response_list = get_answers_from_db(h4, question_text, [])
+    if isinstance(response_list, list) and response_list:
+        print("found response_list")        
         for item in response_list:
             print(f"Item: {item}")
             buttons = question_wrapper.find_elements(By.CSS_SELECTOR, "label[for]")
@@ -520,6 +541,12 @@ def answer_Exercice_02(driver, ChatGPT, question_wrapper, h4):
                         print(f"Button text: {button.text.strip()}")
                     else:
                         print(f"Button with text '{button   }' not found.")
+    else:
+        print("Response n'est pas une liste valide ou est vide.")
+        get_answer_Exercice_02(driver, ChatGPT, question_wrapper, h4)
+        print("saved on data base")
+        sleep(2)
+        answer_Exercice_02(driver, ChatGPT, question_wrapper, h4)
 
 def anwer_exercice(driver, ChatGPT):
     driver.get("https://general.global-exam.com/levels/content/9584")
@@ -550,30 +577,32 @@ def anwer_exercice(driver, ChatGPT):
             target = None
         if target or targets:
             answer_Exercice_01(driver, ChatGPT, target, targets)
-            try:
-                validate_button = WebDriverWait(driver, 20).until(
-                EC.element_to_be_clickable((By.XPATH, "//button[contains(@class, 'relative overflow-hidden group inline-flex justify-center font-bold rounded-full') and .//span[text()='Valider']]"))
-                )
-                driver.execute_script("arguments[0].scrollIntoView({behavior: 'smooth', block: 'center'});", validate_button)
-                validate_button.click()
-                print("Clicked on 'Valider' button.")
-                sleep(2)
-            except Exception as e:
-                print(f"Error clicking 'Valider' button: {e}")
+            # try:
+            #     validate_button = WebDriverWait(driver, 20).until(
+            #     EC.element_to_be_clickable((By.XPATH, "//button[contains(@class, 'relative overflow-hidden group inline-flex justify-center font-bold rounded-full') and .//span[text()='Valider']]"))
+            #     )
+            #     driver.execute_script("arguments[0].scrollIntoView({behavior: 'smooth', block: 'center'});", validate_button)
+            #     validate_button.click()
+            #     print("Clicked on 'Valider' button.")
+            #     sleep(2)
+            # except Exception as e:
+            #     print(f"Error clicking 'Valider' button: {e}")
         else:
             answer_Exercice_02(driver, ChatGPT, question_wrapper)
-            try:
-                validate_button = WebDriverWait(driver, 20).until(
-                    EC.element_to_be_clickable((By.XPATH, "//button[contains(@class, 'relative overflow-hidden group inline-flex justify-center font-bold rounded-full') and .//span[text()='Valider']]"))
-                )
-                driver.execute_script("arguments[0].scrollIntoView({behavior: 'smooth', block: 'center'});", validate_button)
-                validate_button.click()
-                print("Clicked on 'Valider' button.")
-                sleep(2)
-            except Exception as e:
-                print(f"Error clicking 'Valider' button: {e}")
+            # try:
+            #     validate_button = WebDriverWait(driver, 20).until(
+            #         EC.element_to_be_clickable((By.XPATH, "//button[contains(@class, 'relative overflow-hidden group inline-flex justify-center font-bold rounded-full') and .//span[text()='Valider']]"))
+            #     )
+            #     driver.execute_script("arguments[0].scrollIntoView({behavior: 'smooth', block: 'center'});", validate_button)
+            #     validate_button.click()
+            #     print("Clicked on 'Valider' button.")
+            #     sleep(2)
+            # except Exception as e:
+            #     print(f"Error clicking 'Valider' button: {e}")
 
 def solve_next_exercice(driver, ChatGPT):
+    driver.get("https://general.global-exam.com/certificates")
+    sleep(2)
     parent_div = WebDriverWait(driver, 20).until(
         EC.presence_of_element_located((By.CSS_SELECTOR, "div.grid.gap-6.grid-cols-1.sm\\:grid-cols-2.md\\:grid-cols-3.lg\\:grid-cols-4"))
     )
@@ -739,26 +768,25 @@ password_label_chat.place(x=900, y=160)
 password_entry_chat.place(x=900, y=190)
 
 
-# Create the subdomain label and entry
-subdomain_label = tk.Label(window, text="Choisissez soit :")
-subdomain_label1 = tk.Label(window, text="grammar - subdomain_entry - vocabulary", font=("Arial", "10", "bold"))
-subdomain_label.pack()
-subdomain_label1.pack()
-subdomain_entry = tk.Entry(window)
-subdomain_entry.insert(0, "grammar")
-subdomain_entry.pack()
-subdomain_label.place(x=350, y=140)
-subdomain_label1.place(x=350, y=155)
-subdomain_entry.place(x=350, y=180)
+
 
 
 
 def on_solve_next_exercice():
     try:
-        username = username_entry.get()
-        password = password_entry.get()
-        googlelogin = username_entry_chat.get()
-        googlepassword = password_entry_chat.get()
+        # username = username_entry.get()
+        # password = password_entry.get()
+        # googlelogin = username_entry_chat.get()
+        # googlepassword = password_entry_chat.get()
+        
+        username = "se.jari@ecole-ipssi.net"
+        password = "Salah1999.."
+        googlelogin = "salah1999jari@gmail.com"
+        googlepassword = "Donttryhbibi127."
+        
+        
+        # googlelogin = "gta5leomessi"
+        # googlepassword = "Test123!!"
 
 
 
@@ -845,7 +873,7 @@ def on_solve_next_exercice():
         except Exception as e:
             print(f"Error: 'Se connecter' button not found or not clickable. Details: {e}")
         
-        ChatGPT.get("https://chatgpt.com/c/68187314-b408-8004-a82a-49c5ae53d291")
+        ChatGPT.get("https://chatgpt.com/c/6821d4c0-abf0-8004-95b2-1886a29bc2ac")
         print("Clicked on 'Suivant' button.")
         sleep(3)
 
