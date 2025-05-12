@@ -128,9 +128,9 @@ def get_answer_Exercice_01(driver, ChatGPT, target, targets, h4):
                 EC.presence_of_element_located((By.ID, "question-wrapper"))
             )
     try:
-            div_element = WebDriverWait(driver, 20).until(
-                EC.presence_of_element_located((By.CSS_SELECTOR, "div.bullet-list"))
-                )
+        div_element = WebDriverWait(driver, 20).until(
+            EC.presence_of_element_located((By.CSS_SELECTOR, "div.bullet-list"))
+            )
     except Exception as e:
         print(f"Error locating addsitional drop zones: {e}")
     question_text = question_wrapper.text
@@ -157,12 +157,16 @@ def get_answer_Exercice_01(driver, ChatGPT, target, targets, h4):
         # question_text = f"""Question: 
         # {question_text}"""
         # print("Question:", question_text)
-        proposition_container = WebDriverWait(driver, 20).until(
-            EC.presence_of_element_located((By.CSS_SELECTOR, "div[data-name='exam-answer-container']"))
-        )
-        propositionsList = [
-            button.text for button in proposition_container.find_elements(By.CSS_SELECTOR, "button[data-draggable-item-id]")
-        ]
+        try:
+            proposition_container = WebDriverWait(driver, 20).until(
+                EC.presence_of_element_located((By.CSS_SELECTOR, "div[data-name='exam-answer-container']"))
+            )
+            propositionsList = [
+                button.text for button in proposition_container.find_elements(By.CSS_SELECTOR, "button[data-draggable-item-id]")
+            ]
+        except Exception as e:
+            print(f"Error locating proposition container: {e}")
+            propositionsList = []
         print("Propositions:", propositionsList)
         if len(propositionsList) > 0:
             propositions = f"""[{','.join(f'"{p}"' for p in propositionsList)}]"""
@@ -171,24 +175,32 @@ def get_answer_Exercice_01(driver, ChatGPT, target, targets, h4):
             print("Prompt:", Prompt)
             lines = Prompt.strip().split("\n")
             Ask_ChatGPT(ChatGPT, lines)
-            sleep(2)
+            sleep(25)
         else:
             propositionsList = []
             Prompt = question_text
             print("Prompt:", Prompt)
             lines = Prompt.strip().split("\n")
             Ask_ChatGPT(ChatGPT, lines)
-            sleep(2)
+            sleep(25)
     except Exception as e:
         print(f"Error while processing propositions: {e}")
         Prompt = question_text
         print("Prompt:", Prompt)
-    Response_wrapper = WebDriverWait(ChatGPT, 20).until(
-                            EC.presence_of_all_elements_located((By.CSS_SELECTOR, "div.markdown.prose.dark\\:prose-invert.w-full.break-words.light > p"))
-                        )[-1]
-    print("Response_wrapper:", Response_wrapper)
-    sleep(2)
-    Response = Response_wrapper.text
+    try:
+        Response_wrapper = WebDriverWait(ChatGPT, 20).until(
+            EC.presence_of_all_elements_located((By.CSS_SELECTOR, "div.markdown.prose.dark\\:prose-invert.w-full.break-words.light > p"))
+        )[-1]
+        print("Response_wrapper:", Response_wrapper)
+        Response = Response_wrapper.text
+        print("Response:", Response)
+    except StaleElementReferenceException:
+        print("Stale element detected. Re-locating the Response_wrapper...")
+        Response_wrapper = WebDriverWait(ChatGPT, 20).until(
+            EC.presence_of_all_elements_located((By.CSS_SELECTOR, "div.markdown.prose.dark\\:prose-invert.w-full.break-words.light > p"))
+        )[-1]
+        Response = Response_wrapper.text
+        print("Response (after re-locating):", Response)
     print("Response:", Response)
     sleep(2)
     print("Propositions:" , propositionsList)
@@ -202,7 +214,7 @@ def get_answer_Exercice_01(driver, ChatGPT, target, targets, h4):
         """ + propositions + "\n" + "Reflichis bien avant de me donner la reponse, car la réponse doit impérativement être correcte."
         lines = Prompt.strip().split("\n")
         Ask_ChatGPT(ChatGPT, lines)
-        sleep(2)
+        sleep(25)
         Response_w = WebDriverWait(ChatGPT, 30).until(
                             EC.presence_of_all_elements_located((By.CSS_SELECTOR, "div.markdown.prose.dark\\:prose-invert.w-full.break-words.light > p"))
                         )[-1]
@@ -221,10 +233,11 @@ def get_answer_Exercice_01(driver, ChatGPT, target, targets, h4):
         """ + propositions + "\n" + "Reflichis bien avant de me donner la reponse, car la réponse doit impérativement être correcte."
         lines = Prompt.strip().split("\n")
         Ask_ChatGPT(ChatGPT, lines)
-        sleep(2)
+        sleep(25)
         Response_w = WebDriverWait(ChatGPT, 30).until(
                             EC.presence_of_all_elements_located((By.CSS_SELECTOR, "div.markdown.prose.dark\\:prose-invert.w-full.break-words.light > p"))
                         )[-1]
+        
         print("Response_wrapper:", Response_w)
         Response = Response_w.text
         try:
@@ -256,7 +269,11 @@ def get_answer_Exercice_01(driver, ChatGPT, target, targets, h4):
                 }
                 db_certif = Certificat.insert_one(Certif)
                 certif_id = db_certif.inserted_id
-            existing_exercise = Exercice.find_one({"question": question_text})
+            
+            existing_exercise = Exercice.find_one({
+                "question": question_text,
+                "response": {"$all": propositionsList}  # Ensure all responses are in propositionsList
+            })
                 
             if existing_exercise:
                 # If the exercise exists, get its ID
@@ -293,7 +310,7 @@ def get_answer_Exercice_02(driver, ChatGPT, question_wrapper, h4):
     question_text = question_wrapper.text
     lines = question_text.strip().split("\n")
     Ask_ChatGPT(ChatGPT, lines)
-    sleep(2)
+    sleep(25)
     try:
         Response_wrapper = WebDriverWait(ChatGPT, 20).until(
             EC.presence_of_all_elements_located((By.CSS_SELECTOR, "div.markdown.prose.dark\\:prose-invert.w-full.break-words.light > p"))
@@ -612,7 +629,7 @@ def solve_next_exercice(driver, ChatGPT):
     
 
     for child in child_divs:
-        h4_elements = child.find_element(By.TAG_NAME, "h4")
+        h4_elements = child_divs[1].find_element(By.TAG_NAME, "h4")
         h4 = h4_elements.text
         
         # ChatGPT.get("https://chatgpt.com/c/681368bb-23c8-8002-a76b-678d4b789960")
@@ -620,7 +637,7 @@ def solve_next_exercice(driver, ChatGPT):
         sleep(1)
         print("child:", child.text)
         
-        child.click()
+        child_divs[1].click()
         print("Clicked on a child element.")
         sleep(1)
         specific_element = WebDriverWait(driver, 20).until(
@@ -638,36 +655,45 @@ def solve_next_exercice(driver, ChatGPT):
         print("Clicked on the 'Certification' element with the specified class.")
         
         sleep(1)
-        # for i in range(50):
-        #     driver.get("https://general.global-exam.com/levels/content/9584")
-        #     specific_element = WebDriverWait(driver, 20).until(
-        #     EC.element_to_be_clickable((By.XPATH, "//div[contains(@class, 'flex items-center justify-between p-6 cursor-pointer') and .//p[contains(text(),'Certification')]]"))
-        # )
-        #     driver.execute_script("arguments[0].scrollIntoView({behavior: 'smooth', block: 'center'});", specific_element)
-        #     specific_element.click()
-        #     print("Clicked on the 'Certification' element.")
-        #     sleep(1)
+        try:
+            client = MongoClient("mongodb://localhost:27017/")  # Replace with your MongoDB connection string if needed
+            db = client["GlobalExamSolver"]  # Replace with your database name
+            Certificat = db["Certificat"]  # Replace with your collection name
             
-        #     certification_element = WebDriverWait(driver, 20).until(
-        #         EC.element_to_be_clickable((By.XPATH, "//div[@class='group flex flex-col items-center cursor-pointer' and .//p[text()='Certification']]"))
-        #     )
-        #     certification_element.click()
-        #     try:
-        #         question_wrapper = WebDriverWait(driver, 20).until(
-        #             EC.presence_of_element_located((By.ID, "question-wrapper"))
-        #         )
-        #         # Locate the primary target drop zone
-        #         target = driver.find_element(By.CSS_SELECTOR, "div[role='textbox'], .drop-zone, .dashed-border-box:not(:has(*))")
-        #         # Locate all potential drop zones
-        #         targets = question_wrapper.find_elements(By.CSS_SELECTOR, "span.drop-zone")
-        #     except Exception as e:
-        #         print(f"Error locating additional drop zones: {e}")
-        #         targets = []
-        #         target = None
-        #     if target or targets:
-        #         get_answer_Exercice_01(driver, ChatGPT, target, targets, h4)
-        #     else:
-        #         get_answer_Exercice_02(driver, ChatGPT, question_wrapper, h4)
+            existing_certificat = Certificat.find_one({"nom": h4})
+            if existing_certificat:
+                for i in range(50):
+                    driver.get("https://general.global-exam.com/levels/content")
+                    specific_element = WebDriverWait(driver, 20).until(
+                    EC.element_to_be_clickable((By.XPATH, "//div[contains(@class, 'flex items-center justify-between p-6 cursor-pointer') and .//p[contains(text(),'Certification')]]"))
+                )
+                    driver.execute_script("arguments[0].scrollIntoView({behavior: 'smooth', block: 'center'});", specific_element)
+                    specific_element.click()
+                    print("Clicked on the 'Certification' element.")
+                    sleep(1)
+                    
+                    certification_element = WebDriverWait(driver, 20).until(
+                        EC.element_to_be_clickable((By.XPATH, "//div[@class='group flex flex-col items-center cursor-pointer' and .//p[text()='Certification']]"))
+                    )
+                    certification_element.click()
+                    try:
+                        question_wrapper = WebDriverWait(driver, 20).until(
+                            EC.presence_of_element_located((By.ID, "question-wrapper"))
+                        )
+                        # Locate the primary target drop zone
+                        target = driver.find_element(By.CSS_SELECTOR, "div[role='textbox'], .drop-zone, .dashed-border-box:not(:has(*))")
+                        # Locate all potential drop zones
+                        targets = question_wrapper.find_elements(By.CSS_SELECTOR, "span.drop-zone")
+                    except Exception as e:
+                        print(f"Error locating additional drop zones: {e}")
+                        targets = []
+                        target = None
+                    if target or targets:
+                        get_answer_Exercice_01(driver, ChatGPT, target, targets, h4)
+                    else:
+                        get_answer_Exercice_02(driver, ChatGPT, question_wrapper, h4)
+        except Exception as e:
+            print(f"Error during MongoDB operations: {e}")
         for i in range(30):
             driver.get("https://general.global-exam.com/levels/content/9584")
             specific_element = WebDriverWait(driver, 20).until(
