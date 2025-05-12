@@ -629,7 +629,7 @@ def solve_next_exercice(driver, ChatGPT):
     
 
     for child in child_divs:
-        h4_elements = child_divs[1].find_element(By.TAG_NAME, "h4")
+        h4_elements = child.find_element(By.TAG_NAME, "h4")
         h4 = h4_elements.text
         
         # ChatGPT.get("https://chatgpt.com/c/681368bb-23c8-8002-a76b-678d4b789960")
@@ -637,7 +637,7 @@ def solve_next_exercice(driver, ChatGPT):
         sleep(1)
         print("child:", child.text)
         
-        child_divs[1].click()
+        child.click()
         print("Clicked on a child element.")
         sleep(1)
         specific_element = WebDriverWait(driver, 20).until(
@@ -663,19 +663,6 @@ def solve_next_exercice(driver, ChatGPT):
             existing_certificat = Certificat.find_one({"nom": h4})
             if existing_certificat:
                 for i in range(50):
-                    driver.get("https://general.global-exam.com/levels/content")
-                    specific_element = WebDriverWait(driver, 20).until(
-                    EC.element_to_be_clickable((By.XPATH, "//div[contains(@class, 'flex items-center justify-between p-6 cursor-pointer') and .//p[contains(text(),'Certification')]]"))
-                )
-                    driver.execute_script("arguments[0].scrollIntoView({behavior: 'smooth', block: 'center'});", specific_element)
-                    specific_element.click()
-                    print("Clicked on the 'Certification' element.")
-                    sleep(1)
-                    
-                    certification_element = WebDriverWait(driver, 20).until(
-                        EC.element_to_be_clickable((By.XPATH, "//div[@class='group flex flex-col items-center cursor-pointer' and .//p[text()='Certification']]"))
-                    )
-                    certification_element.click()
                     try:
                         question_wrapper = WebDriverWait(driver, 20).until(
                             EC.presence_of_element_located((By.ID, "question-wrapper"))
@@ -692,6 +679,19 @@ def solve_next_exercice(driver, ChatGPT):
                         get_answer_Exercice_01(driver, ChatGPT, target, targets, h4)
                     else:
                         get_answer_Exercice_02(driver, ChatGPT, question_wrapper, h4)
+                    driver.get("https://general.global-exam.com/levels/content/9587")
+                    specific_element = WebDriverWait(driver, 20).until(
+                    EC.element_to_be_clickable((By.XPATH, "//div[contains(@class, 'flex items-center justify-between p-6 cursor-pointer') and .//p[contains(text(),'Certification')]]"))
+                )
+                    driver.execute_script("arguments[0].scrollIntoView({behavior: 'smooth', block: 'center'});", specific_element)
+                    specific_element.click()
+                    print("Clicked on the 'Certification' element.")
+                    sleep(1)
+                    
+                    certification_element = WebDriverWait(driver, 20).until(
+                        EC.element_to_be_clickable((By.XPATH, "//div[@class='group flex flex-col items-center cursor-pointer' and .//p[text()='Certification']]"))
+                    )
+                    certification_element.click()
         except Exception as e:
             print(f"Error during MongoDB operations: {e}")
         for i in range(30):
@@ -800,19 +800,14 @@ password_entry_chat.place(x=900, y=190)
 
 def on_solve_next_exercice():
     try:
-        # username = username_entry.get()
-        # password = password_entry.get()
-        # googlelogin = username_entry_chat.get()
-        # googlepassword = password_entry_chat.get()
-        
-        username = "se.jari@ecole-ipssi.net"
-        password = "Salah1999.."
-        googlelogin = "salah1999jari@gmail.com"
-        googlepassword = "Donttryhbibi127."
+        username = username_entry.get()
+        password = password_entry.get()
+        googlelogin = username_entry_chat.get()
+        googlepassword = password_entry_chat.get()
         
         
-        # googlelogin = "gta5leomessi"
-        # googlepassword = "Test123!!"
+        googlelogin = "gta5leomessi"
+        googlepassword = "Test123!!"
 
 
 
