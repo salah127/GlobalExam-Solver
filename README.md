@@ -15,6 +15,17 @@ Ce projet automatise la résolution d'exercices sur la plateforme **GlobalExam**
 ---
 
 ## 🚀 Technologies utilisées
+![1](img/1.png)
+![2](img/2.png)
+![3](img/3.png)
+![4](img/4.png)
+
+
+
+
+
+
+## 🚀 Technologies utilisées
 
 * **Python 3.10+**
 * **Tkinter** : interface utilisateur
