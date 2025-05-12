@@ -353,6 +353,225 @@ def get_answer_Exercice_02(driver, ChatGPT, question_wrapper, h4):
         sleep(2)
         print("Response:", response_list)
 
+def answer_Exercice_01(driver, ChatGPT, target, targets, h4):
+    print("child:", h4) 
+    question_wrapper = WebDriverWait(driver, 20).until(
+                EC.presence_of_element_located((By.ID, "question-wrapper"))
+            )
+    try:
+            div_element = WebDriverWait(driver, 20).until(
+                EC.presence_of_element_located((By.CSS_SELECTOR, "div.bullet-list"))
+                )
+    except Exception as e:
+        print(f"Error locating addsitional drop zones: {e}")
+    question_text = question_wrapper.text
+
+    try:
+        try:
+            div_html = div_element.get_attribute("innerHTML")
+            soup = BeautifulSoup(div_html, "html.parser")
+            print("soup:", soup)
+            for span in soup.find_all("span", class_="drop-zone"):
+                span.replace_with("...............")
+            question_text = soup.get_text(separator=" ").strip()
+        except Exception as e:
+            print(f"Error while processing div element: {e}")
+        # question_text = question_wrapper.text
+        question_text = f"""Question: 
+        {question_text}"""
+        proposition_container = WebDriverWait(driver, 20).until(
+            EC.presence_of_element_located((By.CSS_SELECTOR, "div[data-name='exam-answer-container']"))
+        )
+        propositionsList = [
+            button.text for button in proposition_container.find_elements(By.CSS_SELECTOR, "button[data-draggable-item-id]")
+        ]
+        print("Propositions:", propositionsList)
+        if len(propositionsList) > 0:
+            propositions = f"""[{','.join(f'"{p}"' for p in propositionsList)}]"""
+            print("Propositions:", propositions)
+            Prompt = question_text + "\n" + "Propositions:" + "\n" + "`"+"`"+"`" + propositions + "\n" + "Reflichis bien avant de me donner la reponse, car la réponse doit impérativement être correcte."
+            print("Prompt:", Prompt)
+        else:
+            propositionsList = []
+            Prompt = question_text
+            print("Prompt:", Prompt)
+    except Exception as e:
+        print(f"Error while processing propositions: {e}")
+        Prompt = question_text
+        print("Prompt:", Prompt)
+        
+        
+    lines = Prompt.strip().split("\n")
+    Ask_ChatGPT(ChatGPT, lines)
+    sleep(2)
+    Response_wrapper = WebDriverWait(ChatGPT, 20).until(
+                            EC.presence_of_all_elements_located((By.CSS_SELECTOR, "div.markdown.prose.dark\\:prose-invert.w-full.break-words.light > p"))
+                        )[-1]
+    sleep(2)
+    Response = Response_wrapper.text
+    response_list = json.loads(Response)
+    sleep(2)
+        
+    if isinstance(response_list, list) and response_list:
+        for item in response_list:
+            try:
+                buttons = proposition_container.find_elements(By.CSS_SELECTOR, "button[data-draggable-item-id]")
+                for button in buttons:
+                    print(f"Button : {button}")
+                    print(f"Button et item: {button.text.strip()} == {item}")
+                    if button.text.strip().lower() == item.lower():
+                        if len(targets) > 1:
+                            for target in targets:
+                                print(f"target: {target}")
+                                driver.execute_script("arguments[0].scrollIntoView({behavior: 'smooth', block: 'center'});", target)
+                                actions = ActionChains(driver)
+                                actions.click_and_hold(button).pause(0.3).release().perform()
+                                sleep(1)
+                                break
+                        else:
+                            target = driver.find_element(By.CSS_SELECTOR, "div[role='textbox'], .drop-zone, .dashed-border-box:not(:has(*))")
+                            print(f"target: {target}")
+                            driver.execute_script("arguments[0].scrollIntoView({behavior: 'smooth', block: 'center'});", target)
+                            sleep(0.5)
+                            actions = ActionChains(driver)
+                            # Get the target's dimensions and calculate the bottom-right corner
+                            target_location = target.location
+                            target_size = target.size
+                            end_x = target_location['x'] + target_size['width'] - (target_size['width'] / 4)
+                            end_y = target_location['y'] + target_size['height'] - (target_size['height'] / 4)
+                            # Move the element to the bottom-right corner of the drop zone
+                            actions.click_and_hold(button).pause(0.3).move_by_offset(end_x - button.location['x'], end_y - button.location['y']).pause(0.3).release().perform()
+                            print(f"click: done")
+                            break
+                    else:
+                        continue
+            except StaleElementReferenceException:
+                print("Stale element detected. Re-locating the button...")
+            except Exception as e:
+                print(f"An error occurred: {e}")
+    else:
+        print("Response n'est pas une liste valide ou est vide.")
+        
+        
+def answer_Exercice_02(driver, ChatGPT, question_wrapper, h4):
+    question_text = question_wrapper.text
+    lines = question_text.strip().split("\n")
+    Ask_ChatGPT(ChatGPT, lines)
+    sleep(2)
+    Response_wrapper = WebDriverWait(ChatGPT, 20).until(
+                            EC.presence_of_all_elements_located((By.CSS_SELECTOR, "div.markdown.prose.dark\\:prose-invert.w-full.break-words.light > p"))
+                        )[-1]
+    print("Response_wrapper:", Response_wrapper)
+    sleep(2)
+    Response = Response_wrapper.text
+    print("Response:", Response)
+    sleep(2)
+    response_list = json.loads(Response)
+    if isinstance(response_list, list) and response_list:
+        ######################################################################
+        try:
+            client = MongoClient("mongodb://localhost:27017/")  # Replace with your MongoDB connection string if needed
+            db = client["GlobalExamSolver"]  # Replace with your database name
+            Certificat = db["Certificat"]  # Replace with your collection name
+            Exercice = db["Exercice"]  # Replace with your collection name
+            exercice_ids = [str(exercice["_id"]) for exercice in Exercice.find({}, {"_id": 1})]
+            
+            existing_certificat = Certificat.find_one({"nom": h4})
+            if existing_certificat:
+                # If the certificate exists, get its ID
+                certif_id = existing_certificat["_id"]
+                print(f"Certificate already exists with ID: {certif_id}")
+            else:
+                Certif = {
+                    "nom": h4,
+                    "question": [],
+                }
+                db_certif = Certificat.insert_one(Certif)
+                certif_id = db_certif.inserted_id
+            existing_exercise = Exercice.find_one({"question": question_text})
+            if existing_exercise:
+                # If the exercise exists, get its ID
+                Exe_id = existing_exercise["_id"]
+                print(f"Exercise already exists with ID: {Exe_id}")
+            else:
+                # If the exercise is new, insert it
+                Exe = {
+                    "question": question_text,
+                    "response": response_list,
+                }
+                print("Exe:", Exe)
+                db_Exercice = Exercice.insert_one(Exe)
+                Exe_id = db_Exercice.inserted_id  # Get the inserted exercise ID
+                print(f"New exercise inserted with ID: {Exe_id}")
+
+                # Update the certificate with the exercise ID
+                Certificat.update_one(
+                    {"_id": certif_id},
+                    {"$push": {"question": str(Exe_id)}}  # Add the exercise ID to the 'question' list
+                )
+                print(f"Certificate updated with exercise ID: {Exe_id}")
+            
+        except Exception as e:
+            print(f"Error storing response in MongoDB: {e}")
+        finally:
+            client.close()
+        ##############################################################
+        
+        sleep(2)
+        print("Response:", response_list)
+
+def anwer_exercice(driver, ChatGPT):
+    driver.get("https://general.global-exam.com/levels/content/9584")
+    specific_element = WebDriverWait(driver, 20).until(
+    EC.element_to_be_clickable((By.XPATH, "//div[contains(@class, 'flex items-center justify-between p-6 cursor-pointer') and .//p[contains(text(),'Certification')]]"))
+)
+    driver.execute_script("arguments[0].scrollIntoView({behavior: 'smooth', block: 'center'});", specific_element)
+    specific_element.click()
+    print("Clicked on the 'Certification' element.")
+    sleep(1)
+    
+    certification_element = WebDriverWait(driver, 20).until(
+        EC.element_to_be_clickable((By.XPATH, "//div[@class='group flex flex-col items-center cursor-pointer' and .//p[text()='Certification']]"))
+    )
+    certification_element.click()
+    for i in range(30):
+        try:
+            question_wrapper = WebDriverWait(driver, 20).until(
+                EC.presence_of_element_located((By.ID, "question-wrapper"))
+            )
+            # Locate the primary target drop zone
+            target = driver.find_element(By.CSS_SELECTOR, "div[role='textbox'], .drop-zone, .dashed-border-box:not(:has(*))")
+            # Locate all potential drop zones
+            targets = question_wrapper.find_elements(By.CSS_SELECTOR, "span.drop-zone")
+        except Exception as e:
+            print(f"Error locating additional drop zones: {e}")
+            targets = []
+            target = None
+        if target or targets:
+            answer_Exercice_01(driver, ChatGPT, target, targets)
+            try:
+                validate_button = WebDriverWait(driver, 20).until(
+                EC.element_to_be_clickable((By.XPATH, "//button[contains(@class, 'relative overflow-hidden group inline-flex justify-center font-bold rounded-full') and .//span[text()='Valider']]"))
+                )
+                driver.execute_script("arguments[0].scrollIntoView({behavior: 'smooth', block: 'center'});", validate_button)
+                validate_button.click()
+                print("Clicked on 'Valider' button.")
+                sleep(2)
+            except Exception as e:
+                print(f"Error clicking 'Valider' button: {e}")
+        else:
+            answer_Exercice_02(driver, ChatGPT, question_wrapper)
+            try:
+                validate_button = WebDriverWait(driver, 20).until(
+                    EC.element_to_be_clickable((By.XPATH, "//button[contains(@class, 'relative overflow-hidden group inline-flex justify-center font-bold rounded-full') and .//span[text()='Valider']]"))
+                )
+                driver.execute_script("arguments[0].scrollIntoView({behavior: 'smooth', block: 'center'});", validate_button)
+                validate_button.click()
+                print("Clicked on 'Valider' button.")
+                sleep(2)
+            except Exception as e:
+                print(f"Error clicking 'Valider' button: {e}")
+
 def solve_next_exercice(driver, ChatGPT):
     parent_div = WebDriverWait(driver, 20).until(
         EC.presence_of_element_located((By.CSS_SELECTOR, "div.grid.gap-6.grid-cols-1.sm\\:grid-cols-2.md\\:grid-cols-3.lg\\:grid-cols-4"))
@@ -417,28 +636,28 @@ def solve_next_exercice(driver, ChatGPT):
                 target = None
             if target or targets:
                 get_answer_Exercice_01(driver, ChatGPT, target, targets)
-                try:
-                    validate_button = WebDriverWait(driver, 20).until(
-                    EC.element_to_be_clickable((By.XPATH, "//button[contains(@class, 'relative overflow-hidden group inline-flex justify-center font-bold rounded-full') and .//span[text()='Valider']]"))
-                    )
-                    driver.execute_script("arguments[0].scrollIntoView({behavior: 'smooth', block: 'center'});", validate_button)
-                    validate_button.click()
-                    print("Clicked on 'Valider' button.")
-                    sleep(2)
-                except Exception as e:
-                    print(f"Error clicking 'Valider' button: {e}")
+                # try:
+                #     validate_button = WebDriverWait(driver, 20).until(
+                #     EC.element_to_be_clickable((By.XPATH, "//button[contains(@class, 'relative overflow-hidden group inline-flex justify-center font-bold rounded-full') and .//span[text()='Valider']]"))
+                #     )
+                #     driver.execute_script("arguments[0].scrollIntoView({behavior: 'smooth', block: 'center'});", validate_button)
+                #     validate_button.click()
+                #     print("Clicked on 'Valider' button.")
+                #     sleep(2)
+                # except Exception as e:
+                #     print(f"Error clicking 'Valider' button: {e}")
             else:
                 get_answer_Exercice_02(driver, ChatGPT, question_wrapper)
-                try:
-                    validate_button = WebDriverWait(driver, 20).until(
-                        EC.element_to_be_clickable((By.XPATH, "//button[contains(@class, 'relative overflow-hidden group inline-flex justify-center font-bold rounded-full') and .//span[text()='Valider']]"))
-                    )
-                    driver.execute_script("arguments[0].scrollIntoView({behavior: 'smooth', block: 'center'});", validate_button)
-                    validate_button.click()
-                    print("Clicked on 'Valider' button.")
-                    sleep(2)
-                except Exception as e:
-                    print(f"Error clicking 'Valider' button: {e}")
+                # try:
+                #     validate_button = WebDriverWait(driver, 20).until(
+                #         EC.element_to_be_clickable((By.XPATH, "//button[contains(@class, 'relative overflow-hidden group inline-flex justify-center font-bold rounded-full') and .//span[text()='Valider']]"))
+                #     )
+                #     driver.execute_script("arguments[0].scrollIntoView({behavior: 'smooth', block: 'center'});", validate_button)
+                #     validate_button.click()
+                #     print("Clicked on 'Valider' button.")
+                #     sleep(2)
+                # except Exception as e:
+                #     print(f"Error clicking 'Valider' button: {e}")
     print("done!!!")
 
 
@@ -509,9 +728,7 @@ def on_solve_next_exercice():
         password = password_entry.get()
         googlelogin = username_entry_chat.get()
         googlepassword = password_entry_chat.get()
-        
-        googlelogin = ""
-        googlepassword = ""
+
 
 
         
@@ -554,17 +771,6 @@ def on_solve_next_exercice():
             print("Clicked on 'Se connecter' button.")
         except Exception as e:
             print(f"Error: 'Se connecter' button not found or not clickable. Details: {e}")
-        # login_button.click()
-        # print("Clicked on 'Se connecter' button.")
-        # sleep(5)
-        # Locate and click the "Se connecter" button
-        # login_button = WebDriverWait(ChatGPT, 10).until(
-        #     EC.element_to_be_clickable((By.XPATH, "//button[contains(@class, 'btn-primary') and @data-testid='mobile-login-button']"))
-        # )
-        
-        # login_button.click()
-        # ChatGPT.get("https://auth.openai.com/authorize?audience=https%3A%2F%2Fapi.openai.com%2Fv1&client_id=TdJIcbe16WoTHtN95nyywh5E4yOo6ItG&country_code=FR&device_id=50e82e10-92b2-4679-b6cb-69f7868e4bcf&ext-login-allow-phone=true&ext-oai-did=50e82e10-92b2-4679-b6cb-69f7868e4bcf&ext-signup-allow-phone=true&prompt=login&redirect_uri=https%3A%2F%2Fchatgpt.com%2Fapi%2Fauth%2Fcallback%2Fopenai&response_type=code&scope=openid+email+profile+offline_access+model.request+model.read+organization.read+organization.write&screen_hint=login&state=Qm87FED2-o2Ao0a6NJj00S6aNCy26Szv9lyX-U1yLpk&flow=treatment")
-            # Click on the 'Continuer avec Google' button
         try:
             google_button = WebDriverWait(ChatGPT, 10).until(
                 EC.element_to_be_clickable((By.XPATH, "//button[@name='intent' and @value='google' and .//div[contains(@class, '_logoPositioner_gdh4y_1')]]"))
