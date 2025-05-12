@@ -16,16 +16,16 @@ Ce projet automatise la résolution d'exercices sur la plateforme **GlobalExam**
 
 ## 🚀 Technologies utilisées
 
-# Type 1: 
+### Type 1: 
 ![1](img/1.png)
 
-# Type 2: 
+### Type 2: 
 ![2](img/2.png)
 
-# Type 3: 
+### Type 3: 
 ![3](img/3.png)
 
-# Type 4: 
+### Type 4: 
 ![4](img/4.png)
 
 
