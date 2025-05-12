@@ -353,6 +353,34 @@ def get_answer_Exercice_02(driver, ChatGPT, question_wrapper, h4):
         sleep(2)
         print("Response:", response_list)
 
+from bson import ObjectId
+def get_answers_from_db(h4):
+    response_list = []
+    try:
+        client = MongoClient("mongodb://localhost:27017/")  # Replace with your MongoDB connection string if needed
+        db = client["GlobalExamSolver"]  # Replace with your database name
+        Certificat = db["Certificat"]  # Replace with your collection name
+        Exercice = db["Exercice"]
+        
+        # Find the certificate with the given name (h4)
+        existing_certificat = Certificat.find_one({"nom": h4})
+        if existing_certificat:
+            question_ids = existing_certificat.get("question", [])
+            print(f"Questions for certificate '{h4}': {question_ids}")
+            for question_id in question_ids:
+                # exercise = Exercice.find_one({"_id": question_id})
+                exercise = Exercice.find_one({"_id": ObjectId(question_id)})
+                if exercise:
+                    response_list.append(exercise.get("question", ""))
+            print(f"Response list for certificate salaaaaaaaaaaaaaaaaaaaaaah '{h4}': {response_list}")
+        else:
+            print(f"No certificate found with name '{h4}'")
+    except Exception as e:
+        print(f"Error retrieving questions from MongoDB: {e}")
+    finally:
+        client.close()
+    return response_list
+
 def answer_Exercice_01(driver, ChatGPT, target, targets, h4):
     print("child:", h4) 
     question_wrapper = WebDriverWait(driver, 20).until(
@@ -401,17 +429,20 @@ def answer_Exercice_01(driver, ChatGPT, target, targets, h4):
         print("Prompt:", Prompt)
         
         
-    lines = Prompt.strip().split("\n")
-    Ask_ChatGPT(ChatGPT, lines)
+    # lines = Prompt.strip().split("\n")
+    # Ask_ChatGPT(ChatGPT, lines)
+    # sleep(2)
+    # Response_wrapper = WebDriverWait(ChatGPT, 20).until(
+    #                         EC.presence_of_all_elements_located((By.CSS_SELECTOR, "div.markdown.prose.dark\\:prose-invert.w-full.break-words.light > p"))
+    #                     )[-1]
+    # sleep(2)
+    # Response = Response_wrapper.text
+    # response_list = json.loads(Response)
+    
+    response_list = get_answers_from_db(h4)
+    print("salah Response:", response_list)
     sleep(2)
-    Response_wrapper = WebDriverWait(ChatGPT, 20).until(
-                            EC.presence_of_all_elements_located((By.CSS_SELECTOR, "div.markdown.prose.dark\\:prose-invert.w-full.break-words.light > p"))
-                        )[-1]
-    sleep(2)
-    Response = Response_wrapper.text
-    response_list = json.loads(Response)
-    sleep(2)
-        
+    
     if isinstance(response_list, list) and response_list:
         for item in response_list:
             try:
@@ -467,58 +498,27 @@ def answer_Exercice_02(driver, ChatGPT, question_wrapper, h4):
     print("Response:", Response)
     sleep(2)
     response_list = json.loads(Response)
-    if isinstance(response_list, list) and response_list:
-        ######################################################################
-        try:
-            client = MongoClient("mongodb://localhost:27017/")  # Replace with your MongoDB connection string if needed
-            db = client["GlobalExamSolver"]  # Replace with your database name
-            Certificat = db["Certificat"]  # Replace with your collection name
-            Exercice = db["Exercice"]  # Replace with your collection name
-            exercice_ids = [str(exercice["_id"]) for exercice in Exercice.find({}, {"_id": 1})]
-            
-            existing_certificat = Certificat.find_one({"nom": h4})
-            if existing_certificat:
-                # If the certificate exists, get its ID
-                certif_id = existing_certificat["_id"]
-                print(f"Certificate already exists with ID: {certif_id}")
-            else:
-                Certif = {
-                    "nom": h4,
-                    "question": [],
-                }
-                db_certif = Certificat.insert_one(Certif)
-                certif_id = db_certif.inserted_id
-            existing_exercise = Exercice.find_one({"question": question_text})
-            if existing_exercise:
-                # If the exercise exists, get its ID
-                Exe_id = existing_exercise["_id"]
-                print(f"Exercise already exists with ID: {Exe_id}")
-            else:
-                # If the exercise is new, insert it
-                Exe = {
-                    "question": question_text,
-                    "response": response_list,
-                }
-                print("Exe:", Exe)
-                db_Exercice = Exercice.insert_one(Exe)
-                Exe_id = db_Exercice.inserted_id  # Get the inserted exercise ID
-                print(f"New exercise inserted with ID: {Exe_id}")
+    if isinstance(response_list, list) and response_list:        
+        for item in response_list:
+            print(f"Item: {item}")
+            buttons = question_wrapper.find_elements(By.CSS_SELECTOR, "label[for]")
+            for button in buttons:
+                if button.text.strip() == item:
+                    print(f"Button: {button}")
+                    actions = ActionChains(driver)
+                    # Scroll to the button and click it
+                    driver.execute_script("arguments[0].scrollIntoView(true);", button)
+                    driver.execute_script("arguments[0].scrollIntoView({behavior: 'smooth', block: 'center'});", button)
+                    sleep(0.5)
+                    WebDriverWait(driver, 10).until(EC.element_to_be_clickable(button))
+                    button.click()
+                    print(f"Click: done")
+                # Re-locate the question wrapper to avoid stale element reference
 
-                # Update the certificate with the exercise ID
-                Certificat.update_one(
-                    {"_id": certif_id},
-                    {"$push": {"question": str(Exe_id)}}  # Add the exercise ID to the 'question' list
-                )
-                print(f"Certificate updated with exercise ID: {Exe_id}")
-            
-        except Exception as e:
-            print(f"Error storing response in MongoDB: {e}")
-        finally:
-            client.close()
-        ##############################################################
-        
-        sleep(2)
-        print("Response:", response_list)
+                    if button:
+                        print(f"Button text: {button.text.strip()}")
+                    else:
+                        print(f"Button with text '{button   }' not found.")
 
 def anwer_exercice(driver, ChatGPT):
     driver.get("https://general.global-exam.com/levels/content/9584")
