@@ -1,8 +1,4 @@
-<<<<<<< HEAD
-# GlobalExam-Solver# GlobalExam Solver
-=======
 # GlobalExam Solver
->>>>>>> 26dba5c966e78d6a5cacef4bf1bcdd4cbf4afb7b
 
 Ce projet automatise la résolution d'exercices sur la plateforme **GlobalExam** en utilisant **Selenium**, **BeautifulSoup**, et **ChatGPT**. Il interagit automatiquement avec l'interface de GlobalExam, génère les réponses via ChatGPT, et stocke les résultats dans une base de données MongoDB.
 
