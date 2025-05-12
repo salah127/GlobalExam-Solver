@@ -635,6 +635,56 @@ def solve_next_exercice(driver, ChatGPT):
                 targets = []
                 target = None
             if target or targets:
+                get_answer_Exercice_01(driver, ChatGPT, target, targets, h4)
+                # try:
+                #     validate_button = WebDriverWait(driver, 20).until(
+                #     EC.element_to_be_clickable((By.XPATH, "//button[contains(@class, 'relative overflow-hidden group inline-flex justify-center font-bold rounded-full') and .//span[text()='Valider']]"))
+                #     )
+                #     driver.execute_script("arguments[0].scrollIntoView({behavior: 'smooth', block: 'center'});", validate_button)
+                #     validate_button.click()
+                #     print("Clicked on 'Valider' button.")
+                #     sleep(2)
+                # except Exception as e:
+                #     print(f"Error clicking 'Valider' button: {e}")
+            else:
+                get_answer_Exercice_02(driver, ChatGPT, question_wrapper, h4)
+                # try:
+                #     validate_button = WebDriverWait(driver, 20).until(
+                #         EC.element_to_be_clickable((By.XPATH, "//button[contains(@class, 'relative overflow-hidden group inline-flex justify-center font-bold rounded-full') and .//span[text()='Valider']]"))
+                #     )
+                #     driver.execute_script("arguments[0].scrollIntoView({behavior: 'smooth', block: 'center'});", validate_button)
+                #     validate_button.click()
+                #     print("Clicked on 'Valider' button.")
+                #     sleep(2)
+                # except Exception as e:
+                #     print(f"Error clicking 'Valider' button: {e}")
+        for i in range(30):
+            driver.get("https://general.global-exam.com/levels/content/9584")
+            specific_element = WebDriverWait(driver, 20).until(
+            EC.element_to_be_clickable((By.XPATH, "//div[contains(@class, 'flex items-center justify-between p-6 cursor-pointer') and .//p[contains(text(),'Certification')]]"))
+        )
+            driver.execute_script("arguments[0].scrollIntoView({behavior: 'smooth', block: 'center'});", specific_element)
+            specific_element.click()
+            print("Clicked on the 'Certification' element.")
+            sleep(1)
+            
+            certification_element = WebDriverWait(driver, 20).until(
+                EC.element_to_be_clickable((By.XPATH, "//div[@class='group flex flex-col items-center cursor-pointer' and .//p[text()='Certification']]"))
+            )
+            certification_element.click()
+            try:
+                question_wrapper = WebDriverWait(driver, 20).until(
+                    EC.presence_of_element_located((By.ID, "question-wrapper"))
+                )
+                # Locate the primary target drop zone
+                target = driver.find_element(By.CSS_SELECTOR, "div[role='textbox'], .drop-zone, .dashed-border-box:not(:has(*))")
+                # Locate all potential drop zones
+                targets = question_wrapper.find_elements(By.CSS_SELECTOR, "span.drop-zone")
+            except Exception as e:
+                print(f"Error locating additional drop zones: {e}")
+                targets = []
+                target = None
+            if target or targets:
                 get_answer_Exercice_01(driver, ChatGPT, target, targets)
                 # try:
                 #     validate_button = WebDriverWait(driver, 20).until(
