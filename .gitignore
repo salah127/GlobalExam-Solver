@@ -1,0 +1,9 @@
+geckodriver.log
+*test*.*
+*test*
+tempCodeRunnerFile.py
+
+# Credentials — never commit these
+config.py
+progress.json
+*.bak
